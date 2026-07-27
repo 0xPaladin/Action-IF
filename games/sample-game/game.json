@@ -1,0 +1,831 @@
+{
+  "name": "Echoes in the Void",
+  "items": [
+    {
+      "id": "aurumite_plate",
+      "name": "Aurumite Plate",
+      "description": "Celestial power armor — reduces incoming harm by 1 in protective contexts",
+      "load": 2,
+      "tags": ["protective"],
+      "effects": { "action": "Muscle", "bonusDice": 1, "armor": 1 }
+    },
+    {
+      "id": "plasma_sword",
+      "name": "Plasma Sword",
+      "description": "Energy blade — devastating in melee",
+      "load": 1,
+      "tags": ["combat"],
+      "effects": { "action": "Muscle", "bonusDice": 1, "bonusTicks": 1 }
+    },
+    {
+      "id": "sniper_rifle",
+      "name": "Sniper Rifle",
+      "description": "Long-range plasma rifle",
+      "load": 2,
+      "tags": ["combat", "outdoor"],
+      "effects": { "action": "Shoot", "bonusDice": 1 }
+    },
+    {
+      "id": "stealth_mesh",
+      "name": "Stealth Mesh",
+      "description": "Active camouflage suit — reduces harm in stealth situations",
+      "load": 1,
+      "tags": ["stealth"],
+      "effects": { "action": "Sneak", "bonusDice": 1, "armor": 1 }
+    },
+    {
+      "id": "engineering_kit",
+      "name": "Engineering Kit",
+      "description": "Tools for any job",
+      "load": 2,
+      "tags": ["tech"],
+      "effects": { "action": "Tinker", "bonusDice": 1 }
+    },
+    {
+      "id": "data_slate",
+      "name": "Data Slate",
+      "description": "Archival research tool",
+      "load": 0,
+      "tags": ["study"],
+      "effects": { "action": "Study", "bonusDice": 1 }
+    },
+    {
+      "id": "relic_scanner",
+      "name": "Relic Scanner",
+      "description": "Detects Ancient energy signatures",
+      "load": 1,
+      "tags": ["ancient", "tech"],
+      "effects": { "action": "Study", "bonusDice": 1 }
+    },
+    {
+      "id": "void_armor",
+      "name": "Void Armor",
+      "description": "Reinforced delve suit",
+      "load": 2,
+      "tags": ["dark", "underground"],
+      "effects": { "action": "Sneak", "bonusDice": 1 }
+    }
+  ],
+
+  "stunts": [
+    {
+      "id": "adamantine_guard",
+      "name": "Adamantine Guard",
+      "description": "+1d when protecting allies in scenes tagged protective",
+      "tags": ["protective"],
+      "effects": { "action": "Muscle", "bonusDice": 1 }
+    },
+    {
+      "id": "inspiring_presence",
+      "name": "Inspiring Presence",
+      "description": "+1d Command when leading a team",
+      "tags": ["team"],
+      "effects": { "action": "Command", "bonusDice": 1 }
+    },
+    {
+      "id": "wind_walker",
+      "name": "Wind Walker",
+      "description": "+1d Move in outdoor scenes",
+      "tags": ["outdoor"],
+      "effects": { "action": "Move", "bonusDice": 1 }
+    },
+    {
+      "id": "system_interface",
+      "name": "System Interface",
+      "description": "Substitute Tinker for Study when analyzing technology",
+      "tags": ["tech", "ancient"],
+      "effects": { "substituteAction": { "from": "Study", "to": "Tinker" } }
+    },
+    {
+      "id": "dark_sight",
+      "name": "Dark Sight",
+      "description": "Bonus die in dark/underground scenes",
+      "tags": ["dark", "underground"],
+      "effects": { "action": "Notice", "bonusDice": 1 }
+    },
+    {
+      "id": "guardian_coordination",
+      "name": "Guardian Coordination",
+      "description": "+1d on team actions",
+      "tags": ["team"],
+      "effects": { "action": "Command", "bonusDice": 1 }
+    },
+    {
+      "id": "celestial_resilience",
+      "name": "Celestial Resilience",
+      "description": "Bonus die when resisting Ancient threats",
+      "tags": ["ancient"],
+      "effects": { "action": "Focus", "bonusDice": 1 }
+    }
+  ],
+
+  "characters": [
+    {
+      "name": "Valeria Steelforged",
+      "actions": { "Muscle": 2, "Command": 2, "Notice": 1, "Focus": 1, "Study": 1 },
+      "items": ["aurumite_plate", "plasma_sword"],
+      "stunts": ["adamantine_guard", "inspiring_presence"]
+    },
+    {
+      "name": "Kael Stormchaser",
+      "actions": { "Move": 2, "Sneak": 2, "Shoot": 1, "Notice": 1, "Study": 1 },
+      "items": ["sniper_rifle", "stealth_mesh"],
+      "stunts": ["wind_walker"]
+    },
+    {
+      "name": "Nexus-Charged-Zeta-7T3",
+      "actions": { "Tinker": 2, "Study": 2, "Finesse": 1, "Notice": 1, "Sway": 1 },
+      "items": ["engineering_kit", "data_slate"],
+      "stunts": ["system_interface"]
+    },
+    {
+      "name": "Mara Deephold",
+      "actions": { "Focus": 2, "Sneak": 2, "Notice": 2, "Study": 1, "Tinker": 1 },
+      "items": ["relic_scanner", "void_armor"],
+      "stunts": ["dark_sight"]
+    }
+  ],
+
+  "crew": {
+    "id": "hammerfall",
+    "name": "Guardian Command 'Hammerfall'",
+    "description": "A Celestial rapid-response team tasked with containing Ancient threats in contested sectors.",
+    "coin": 4,
+    "hold": "strong",
+    "lair": "guardian_hq",
+    "upgrades": ["advanced_scanner"],
+    "stunts": ["guardian_coordination"],
+    "claims": []
+  },
+
+  "factions": [
+    {
+      "id": "guardians",
+      "name": "Guardians of the Havens",
+      "description": "The Celestial rapid-response force protecting the Havens from Ancient threats.",
+      "tier": 4,
+      "hold": "strong",
+      "heat": -2,
+      "territory": ["junction", "guardian_hq"],
+      "members": ["Commander Valeria"],
+      "goals": ["Contain Hegemony expansion"],
+      "notes": "Player-aligned faction."
+    },
+    {
+      "id": "hegemony",
+      "name": "The Hegemony",
+      "description": "An Ancient empire of Rhukothi and Echani, expanding into contested space.",
+      "tier": 5,
+      "hold": "strong",
+      "heat": 7,
+      "territory": ["vorath_reach"],
+      "members": ["Agent K'tharr"],
+      "goals": ["Recover archive data"],
+      "notes": "Primary antagonist."
+    },
+    {
+      "id": "gray_syndicate",
+      "name": "Gray Syndicate",
+      "description": "A neutral mercantile Ancient faction with a ward in Junction.",
+      "tier": 4,
+      "hold": "weak",
+      "heat": 0,
+      "territory": [],
+      "members": ["Executive Quoril"],
+      "goals": ["Profit from the conflict"],
+      "notes": "Neutral — can be turned."
+    }
+  ],
+
+  "factionClocks": [
+    {
+      "id": "hegemony_response",
+      "name": "Hegemony Response",
+      "description": "The Hegemony is alerted to Guardian activity in Vorath's Reach.",
+      "clockMax": 6,
+      "onComplete": { "type": "setFlag", "flag": "hegemony_alert" }
+    }
+  ],
+
+  "claims": [
+    {
+      "id": "junction_safehouse",
+      "name": "Junction Safehouse",
+      "description": "A secure hideout in the Gray Syndicate ward of Junction.",
+      "location": "junction",
+      "template": "income",
+      "params": { "amount": 1 },
+      "prerequisites": []
+    },
+    {
+      "id": "guardian_supply_line",
+      "name": "Guardian Supply Line",
+      "description": "Extra supplies from Guardian Command for investigation missions.",
+      "location": "guardian_hq",
+      "template": "bonus_payout",
+      "params": {
+        "tags": ["guardian", "investigation"],
+        "bonusCoin": 2,
+        "bonusRep": 1
+      },
+      "prerequisites": []
+    }
+  ],
+
+  "zones": [
+    {
+      "id": "junction",
+      "type": "realm",
+      "name": "Junction — The Nexus City",
+      "description": "The heart of the Verse. A kaleidoscopic city of infinite wards, where gates pulse with travelers from a thousand worlds.",
+      "parent": null,
+      "links": []
+    },
+    {
+      "id": "guardian_hq",
+      "type": "site",
+      "name": "Guardian Nexus Operations",
+      "description": "A gleaming forward operations base within Junction, housing tactical command and mission control.",
+      "parent": "junction",
+      "links": []
+    },
+    {
+      "id": "waystation_vorath",
+      "type": "site",
+      "name": "Waystation Vorath",
+      "description": "A small Guardian waystation orbiting a bruised gas giant in the Vorath system.",
+      "parent": null,
+      "links": []
+    }
+  ],
+
+  "locations": [
+    {
+      "id": "junction_concord",
+      "name": "Junction — Concord Park",
+      "description": "The heart of the Verse. A kaleidoscopic city of infinite wards, where gates pulse with travelers from a thousand worlds. Miniature suns cycle overhead, casting ever-changing light on rune-paved streets. Gate columns tower in the distance, humming with transit energy.",
+      "parent": "junction",
+      "links": [
+        {
+          "targetId": "guardian_hq_atrium",
+          "label": "Guardian HQ — Nexus Operations"
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "guardian_hq_atrium",
+      "name": "Guardian Nexus — Atrium",
+      "description": "A gleaming forward operations base within Junction. Celestial wardens move with purpose between tactical displays and gate-bay terminals. The air hums with arcane-technological energy.",
+      "parent": "guardian_hq",
+      "mayChangeInventory": true,
+      "links": [
+        { "targetId": "ops_center", "label": "Operations Center" },
+        { "targetId": "junction_concord", "label": "Return to Junction" }
+      ],
+      "actions": []
+    },
+    {
+      "id": "ops_center",
+      "name": "Operations Center",
+      "description": "Holographic star-maps project the Vorath sector in shimmering blue light. Threat markers pulse along contested borders. A data terminal flickers with intercepted Hegemony communications.",
+      "parent": "guardian_hq",
+      "links": [
+        { "targetId": "briefing_room", "label": "Briefing Room" },
+        { "targetId": "guardian_hq_atrium", "label": "Return to Atrium" }
+      ],
+      "actions": [
+        {
+          "id": "review_intel",
+          "label": "Review Intel",
+          "description": "Study intercepted Hegemony communications.",
+          "once": false,
+          "setFlag": "intel_reviewed"
+        },
+        {
+          "id": "start_mission",
+          "label": "Start Mission",
+          "description": "Begin Operation Echoes in the Void — gate to Waystation Vorath.",
+          "once": true,
+          "condition": { "flag": "vorath_mission_ready" },
+          "triggerScene": "engagement_launch"
+        }
+      ]
+    },
+    {
+      "id": "briefing_room",
+      "name": "Briefing Room",
+      "description": "A circular chamber with an elevated holographic projector at its center. Mission data scrolls across translucent displays. Commander Valeria's personal seal glows above the entrance.",
+      "parent": "guardian_hq",
+      "links": [{ "targetId": "ops_center", "label": "Return to Operations Center" }],
+      "actions": []
+    },
+    {
+      "id": "waystation_platform",
+      "name": "Waystation Vorath",
+      "description": "A small Guardian waystation orbiting a bruised gas giant. The station hums with low power — emergency lights cast long shadows across battered bulkheads. A viewport shows the Listening Post as a dark spike on the nearest moon.",
+      "parent": "waystation_vorath",
+      "links": [],
+      "actions": [
+        {
+          "id": "scout_perimeter",
+          "label": "Scout Perimeter",
+          "description": "Survey the area around the Listening Post.",
+          "once": true,
+          "triggerScene": "scout_scene"
+        },
+        {
+          "id": "enter_listening_post",
+          "label": "Enter Listening Post",
+          "description": "Breach the Hegemony facility.",
+          "once": true,
+          "condition": { "flag": "perimeter_key" },
+          "triggerScene": "infiltrate_scene"
+        },
+        {
+          "id": "descend_archive",
+          "label": "Descend to Archive",
+          "description": "Enter the Ancient archive beneath the Listening Post.",
+          "once": true,
+          "condition": { "flag": "archive_unlocked" },
+          "triggerScene": "archive_scene"
+        },
+        {
+          "id": "call_extraction",
+          "label": "Call for Extraction",
+          "description": "Signal for emergency extraction.",
+          "once": true,
+          "condition": { "notFlag": "extraction_called" },
+          "triggerScene": "extract_scene"
+        }
+      ]
+    }
+  ],
+
+  "npcs": [
+    {
+      "id": "valeria",
+      "name": "Commander Valeria",
+      "faction": "guardians",
+      "location": "ops_center",
+      "description": "A stern Celestial warden reviewing tactical displays.",
+      "dialogue": [
+        {
+          "id": "introduction",
+          "fiction": "Commander Valeria looks up from the tactical display as you approach.\n\n'Good. You're here. The situation in Vorath's Reach has escalated. The Hegemony's listening post — K'tharr's operation — sits atop something significant. An Ancient archive that could shift the balance of power.'\n\nShe gestures to the holographic star-map, where a crimson marker pulses in the Vorath system.\n\n'We're calling this Operation Echoes in the Void. Your team will gate to Waystation Vorath, scout the Listening Post, and neutralize the threat. Extract with any archive data you can recover.'\n\nShe crosses her arms. 'Choose your approach.'",
+          "tags": ["guardian", "briefing"],
+          "options": [
+            {
+              "text": "Stealth approach — infiltrate undetected",
+              "setFlag": "stealth_approach",
+              "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
+            },
+            {
+              "text": "Direct assault — overwhelming force",
+              "setFlag": "assault_approach",
+              "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
+            },
+            {
+              "text": "Social engineering — talk our way in",
+              "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lieutenant_kael",
+      "name": "Lieutenant Kael",
+      "faction": "guardians",
+      "location": "guardian_hq_atrium",
+      "description": "A sharp-eyed operations officer monitoring mission status boards.",
+      "dialogue": [
+        {
+          "id": "introduction",
+          "fiction": "Lieutenant Kael glances up from a holo-tablet as you approach.\n\n'Officer. Good to see you. Need a rundown on how Guardian Command runs its missions?'\n\nHe taps the display, bringing up a mission flowchart.\n\n'Every mission starts with an **engagement roll** — rolled against the crew's best action rating. The result determines if you start clean or with a complication.'\n\n'Once you're in the field, you'll face **challenges** — each has a progress clock. Pick an action, pick a character, roll. Critical = 4 ticks. Full = 2 ticks. Partial = 1 tick. Failure = 0 ticks. Each action has a single consequence that triggers on failure. When a challenge clock fills, it's done. When *all* challenges in a scene are done, the scene resolves and you move to the next.'\n\n'Complete all scenes in a mission, and you get the **payoff** — coin and rep. But you also take **heat** based on the worst action outcome, plus the mission's base heat. Your patron faction likes you more; the target faction likes you less.'\n\n'Want me to walk through any of that in more detail?'",
+          "tags": ["guardian", "briefing", "tutorial"],
+          "options": [
+            {
+              "text": "Explain engagement rolls",
+              "triggerDialogue": "engagement_detail"
+            },
+            {
+              "text": "Explain challenge resolution",
+              "triggerDialogue": "challenge_detail"
+            },
+            {
+              "text": "Explain mission payoff and heat",
+              "triggerDialogue": "payoff_detail"
+            },
+            { "text": "No, I've got it" }
+          ]
+        },
+        {
+          "id": "engagement_detail",
+          "fiction": "Kael pulls up a diagram of the engagement table.\n\n'**Engagement Roll** — roll your crew's best action rating. Count 6s, 4-5s, 1-3s.'\n\n'• **Critical** (two or more 6s) → Best outcome, no complication.\n• **Full Success** (one 6) → Clean success, no complication.\n• **Partial Success** (4-5, no 6s) → Success but with a complication from the GM.\n• **Failure** (1-3 only) → The engagement falters.'\n\n'After the engagement roll, you gate to the mission's starting location and the first scene activates automatically.'",
+          "tags": ["guardian", "tutorial"],
+          "options": [
+            {
+              "text": "Back to mission overview",
+              "triggerDialogue": "introduction"
+            },
+            {
+              "text": "Explain challenge resolution",
+              "triggerDialogue": "challenge_detail"
+            },
+            {
+              "text": "Explain mission payoff and heat",
+              "triggerDialogue": "payoff_detail"
+            }
+          ]
+        },
+        {
+          "id": "challenge_detail",
+          "fiction": "Kael swipes to a challenge breakdown.\n\n'**Challenges** are the obstacles in each scene. Each has:\n• A description\n• A progress clock (usually 4-6 segments)\n• Tags (for stunts/items)\n• Action entries — each lists an action name and a single consequence (failure only)'\n\n'**Resolution**:\n1. Pick a challenge\n2. Pick an action entry from that challenge\n3. Assign a character\n4. The engine gathers applicable stunts + items (tags matching scene + challenge)\n5. Roll: action dots + bonus dice - condition penalties - harm penalties\n6. Outcome ticks the clock (critical=4, full=2, partial=1, failure=0) or applies consequence on failure\n\n'**Consequences** use templates — harm (reduces Guard then Body), condition (adds a condition tag that takes a load slot), tickClock (advances the mission danger clock), or loseItem. Consequences only trigger on failure.'",
+          "tags": ["guardian", "tutorial"],
+          "options": [
+            {
+              "text": "Back to mission overview",
+              "triggerDialogue": "introduction"
+            },
+            {
+              "text": "Explain engagement rolls",
+              "triggerDialogue": "engagement_detail"
+            },
+            {
+              "text": "Explain mission payoff and heat",
+              "triggerDialogue": "payoff_detail"
+            }
+          ]
+        },
+        {
+          "id": "payoff_detail",
+          "fiction": "Kael brings up the mission ledger.\n\n'**Mission Completion** triggers automatically when all scenes resolve:\n\n• **Payoff**: Coin and Rep added to crew immediately\n• **Heat**: Max action heat from the mission + base heat. Each action entry has a heat value (default 3). Adjustment by outcome: failure=full, partial/success=−1, critical=−2.\n• **Faction Standing**: Patron faction +1 status, target faction -1 status\n• **Custom onComplete**: Any mission-specific callback fires.\n\n'**Claims** are territorial holdings you can take during downtime. They use formula templates — income, rep_boost, heat_sink, upgrade_slot, faction_contact, territory_control, crew_stunt, lair_room, bonus_payout. Some have prerequisites (other claims).\n\n'**Downtime** between missions: each character gets 2 activities — recovery (tick healing clock), rest (clear conditions), training (spend XP to raise action), long-term project (advance a clock).\n\n'That's the cycle. Engagement → Scenes → Challenges → Completion → Payoff/Heat → Downtime → Repeat.'",
+          "tags": ["guardian", "tutorial"],
+          "options": [
+            {
+              "text": "Back to mission overview",
+              "triggerDialogue": "introduction"
+            },
+            {
+              "text": "Explain engagement rolls",
+              "triggerDialogue": "engagement_detail"
+            },
+            {
+              "text": "Explain challenge resolution",
+              "triggerDialogue": "challenge_detail"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "plotlines": [
+    {
+      "id": "echoes_void",
+      "name": "Echoes in the Void",
+      "description": "Investigate Hegemony activity in Vorath's Reach and neutralize Agent K'tharr's operation.",
+      "scenes": [
+        {
+          "id": "engagement_launch",
+          "type": "dialogue",
+          "fiction": "You gather the team at the operations center's gate terminal. The Vorath portal hums with contained energy.\n\nValeria's voice crackles over the comm: 'Hammerfall, you're green for departure. The gate is calibrated for Waystation Vorath. Once you step through, the operation is live.'\n\nThe air shimmers as the gate runes cycle to full brightness. Time to commit to your approach.",
+          "tags": ["guardian", "gate"],
+          "heat": false,
+          "onEnter": { "type": "engagement" },
+          "options": [
+            {
+              "text": "Stealth approach — infiltrate undetected",
+              "hooks": [
+                { "type": "setLocation", "locationId": "waystation_platform" },
+                {
+                  "type": "log",
+                  "text": "The team steps through the gate in silence, emerging at Waystation Vorath under cover of darkness."
+                }
+              ]
+            },
+            {
+              "text": "Direct assault — overwhelming force",
+              "hooks": [
+                { "type": "setLocation", "locationId": "waystation_platform" },
+                {
+                  "type": "log",
+                  "text": "The team charges through the gate, weapons hot, emerging at Waystation Vorath with guns blazing."
+                }
+              ]
+            },
+            {
+              "text": "Social engineering — talk our way in",
+              "hooks": [
+                { "type": "setLocation", "locationId": "waystation_platform" },
+                {
+                  "type": "log",
+                  "text": "The team steps through the gate posing as Hegemony supply runners, emerging at Waystation Vorath."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "scout_scene",
+          "type": "action",
+          "fiction": "You emerge onto the moon's surface. The Listening Post is a black needle against the starfield, its spires crackling with void-shields. Between you and the facility lies a kilometer of jagged razorgrass and shattered Ancient statuary. Hegemony patrol drones trace lazy arcs overhead.\n\nTime to find a path in.",
+          "tags": ["outdoor", "stealth", "ancient"],
+          "heat": true,
+          "challenges": [
+            {
+              "id": "survey",
+              "description": "Survey the perimeter and find a safe approach.",
+              "clockMax": 4,
+              "tags": ["stealth", "survey"],
+              "actions": [
+                {
+                  "actionName": "Sneak",
+                  "consequences": {
+                    "description": "Patrol drones detect you — alarm raised.",
+                    "template": "tickClock",
+                    "params": { "amount": 2 }
+                  }
+                },
+                {
+                  "actionName": "Notice",
+                  "consequences": {
+                    "description": "You trigger a tripwire, alerting the facility.",
+                    "template": "tickClock",
+                    "params": { "amount": 1 }
+                  }
+                },
+                {
+                  "actionName": "Study",
+                  "consequences": {
+                    "description": "Your flawed analysis sends the team into an ambush.",
+                    "template": "harm",
+                    "params": { "amount": 1 }
+                  }
+                }
+              ],
+              "onComplete": [
+                { "type": "setFlag", "flag": "perimeter_key" },
+                { "type": "tickClock", "clockId": "hegemony_response", "amount": 1 },
+                {
+                  "type": "log",
+                  "text": "Perimeter surveyed. Approach identified."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "infiltrate_scene",
+          "type": "action",
+          "fiction": "The Listening Post's interior is a cathedral of alien design. Bio-silk membranes pulse with dim light. Rhukothi runes crawl along the walls like living things. Two obstacles stand between you and the archive: a sealed security door of crystalline Hegemony design, and a patrol of thrall guards in the central chamber beyond.\n\nYou'll need to overcome both to reach the archive core.",
+          "tags": ["tech", "dark", "ancient"],
+          "heat": true,
+          "challenges": [
+            {
+              "id": "security_door",
+              "description": "A crystalline Hegemony security door — requires technical skill or precision manipulation to bypass.",
+              "clockMax": 4,
+              "tags": ["tech", "ancient"],
+              "actions": [
+                {
+                  "actionName": "Tinker",
+                  "consequences": {
+                    "description": "The door's alarm system triggers.",
+                    "template": "tickClock",
+                    "params": { "amount": 1 }
+                  }
+                },
+                {
+                  "actionName": "Finesse",
+                  "consequences": {
+                    "description": "You trigger a security trap.",
+                    "template": "harm",
+                    "params": { "amount": 3 }
+                  }
+                },
+                {
+                  "actionName": "Study",
+                  "consequences": {
+                    "description": "You trigger a diagnostic alarm.",
+                    "template": "harm",
+                    "params": { "amount": 1 }
+                  }
+                }
+              ],
+              "onComplete": [
+                {
+                  "type": "log",
+                  "text": "Security door bypassed. Path to the central chamber is open."
+                }
+              ]
+            },
+            {
+              "id": "guard_patrol",
+              "description": "A squad of thrall guards patrols the central chamber. Avoid or neutralize them.",
+              "clockMax": 4,
+              "tags": ["combat", "stealth"],
+              "actions": [
+                {
+                  "actionName": "Sneak",
+                  "consequences": {
+                    "description": "A guard spots movement — alarm raised.",
+                    "template": "tickClock",
+                    "params": { "amount": 1 }
+                  }
+                },
+                {
+                  "actionName": "Command",
+                  "consequences": {
+                    "description": "Your authority is challenged — guards attack.",
+                    "template": "harm",
+                    "params": { "amount": 2 }
+                  }
+                },
+                {
+                  "actionName": "Sway",
+                  "consequences": {
+                    "description": "The guards attack without mercy.",
+                    "template": "harm",
+                    "params": { "amount": 3 }
+                  }
+                }
+              ],
+              "onComplete": [
+                { "type": "tickClock", "clockId": "hegemony_response", "amount": 1 }
+              ]
+            }
+          ],
+          "onEnter": [
+            { "type": "log", "text": "The team enters the Listening Post." }
+          ],
+          "onExit": { "type": "setFlag", "flag": "archive_unlocked" }
+        },
+        {
+          "id": "archive_scene",
+          "type": "dialogue",
+          "fiction": "The archive core opens into a vast chamber. At its center, floating above a plinth of carved obsidian, is Agent K'tharr — a Rhukothi sorceress in robes of living shadow. She turns as you enter, eight eyes glowing with cold amusement.\n\n'I was wondering when the Celestials would send their hounds,' she hisses. 'This archive holds secrets that predate your precious Havens. Secrets that will reshape the Verse.'\n\nHer hands crackle with entropic energy. The archive's power core thrums in response.",
+          "tags": ["ancient", "social"],
+          "heat": false,
+          "options": [
+            {
+              "text": "Engage K'tharr directly — combat",
+              "triggerScene": "combat_scene",
+              "condition": { "flag": "assault_approach" }
+            },
+            { "text": "Open fire!", "triggerScene": "combat_scene" },
+            {
+              "text": "Attempt to negotiate — offer her safe passage",
+              "tickFactionClock": { "id": "hegemony_response", "amount": 1 }
+            },
+            {
+              "text": "Sabotage the archive core and escape",
+              "triggerScene": "extract_scene"
+            }
+          ]
+        },
+        {
+          "id": "combat_scene",
+          "type": "action",
+          "fiction": "K'tharr unleashes a wave of entropic force. The archive shakes as she levitates debris and hurls it at your team. Her shadow-form flickers between corporeal and immaterial, making her a difficult target.\n\n'You will die here, and your knowledge will feed the archive!'",
+          "tags": ["combat", "ancient"],
+          "heat": true,
+          "challenges": [
+            {
+              "id": "defeat_ktharr",
+              "description": "Defeat Agent K'tharr before she completes her ritual.",
+              "clockMax": 6,
+              "tags": ["combat", "ancient", "team"],
+              "actions": [
+                {
+                  "actionName": "Muscle",
+                  "consequences": {
+                    "description": "K'tharr's shadow tendril strikes you.",
+                    "template": "harm",
+                    "params": { "amount": 3 }
+                  }
+                },
+                {
+                  "actionName": "Shoot",
+                  "consequences": {
+                    "description": "Your shot hits the power core — collateral damage.",
+                    "template": "harm",
+                    "params": { "amount": 2 }
+                  }
+                },
+                {
+                  "actionName": "Command",
+                  "consequences": {
+                    "description": "K'tharr turns her fury on you.",
+                    "template": "harm",
+                    "params": { "amount": 2 }
+                  }
+                },
+                {
+                  "actionName": "Focus",
+                  "consequences": {
+                    "description": "Her psychic assault shatters your concentration.",
+                    "template": "harm",
+                    "params": { "amount": 2 }
+                  }
+                }
+              ],
+              "onComplete": [
+                { "type": "setFlag", "flag": "agent_defeated" },
+                { "type": "addCoin", "amount": 2 },
+                { "type": "adjustStatus", "factionId": "guardians", "delta": 1 },
+                { "type": "adjustStatus", "factionId": "hegemony", "delta": -1 },
+                { "type": "log", "text": "K'tharr defeated. Archive secured." }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "extract_scene",
+          "type": "action",
+          "fiction": "The mission clock is ticking. With the archive destabilized and Hegemony reinforcements on approach, you must hold your position long enough for the extraction shuttle to lock onto your beacon. Thrall soldiers pour into the facility. This is the final stand.",
+          "tags": ["combat", "protective"],
+          "heat": true,
+          "onEnter": [
+            {
+              "type": "log",
+              "text": "Extraction beacon activated. Reinforcements inbound."
+            }
+          ],
+          "challenges": [
+            {
+              "id": "hold_position",
+              "description": "Hold the extraction point until the shuttle arrives.",
+              "clockMax": 4,
+              "tags": ["combat", "protective", "team"],
+              "actions": [
+                {
+                  "actionName": "Muscle",
+                  "consequences": {
+                    "description": "You take a direct hit from thrall fire.",
+                    "template": "harm",
+                    "params": { "amount": 3 }
+                  }
+                },
+                {
+                  "actionName": "Command",
+                  "consequences": {
+                    "description": "Your team is pinned down.",
+                    "template": "condition",
+                    "params": { "condition": "pinned" }
+                  }
+                },
+                {
+                  "actionName": "Shoot",
+                  "consequences": {
+                    "description": "You're overwhelmed by thrall fire.",
+                    "template": "harm",
+                    "params": { "amount": 2 }
+                  }
+                },
+                {
+                  "actionName": "Focus",
+                  "consequences": {
+                    "description": "The psychic pressure overwhelms you.",
+                    "template": "harm",
+                    "params": { "amount": 1 }
+                  }
+                }
+              ],
+              "onComplete": [
+                { "type": "setFlag", "flag": "extraction_called" },
+                {
+                  "type": "log",
+                  "text": "Extraction successful. The team escapes Vorath's Reach."
+                }
+              ]
+            }
+          ],
+          "onExit": [
+            { "type": "completeMission" },
+            { "type": "setLocation", "locationId": "guardian_hq_atrium" },
+            {
+              "type": "log",
+              "text": "The team returns to Guardian Nexus Operations."
+            }
+          ]
+        }
+      ],
+      "mission": {
+        "engagementAction": "Command",
+        "patron": "Commander Valeria",
+        "patronFaction": "guardians",
+        "targetFaction": "hegemony",
+        "payoff": { "rep": 3, "coin": 4 },
+        "tags": ["guardian", "investigation"],
+        "baseHeat": 2,
+        "locationId": "waystation_platform",
+        "startingSceneId": "scout_scene",
+        "onComplete": { "type": "setFlag", "flag": "operation_complete" }
+      }
+    }
+  ],
+
+  "startLocation": "junction_concord"
+}

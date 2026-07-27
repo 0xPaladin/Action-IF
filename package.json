@@ -1,0 +1,7 @@
+{
+  "name": "action-if",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch server.js"
+  }
+}
