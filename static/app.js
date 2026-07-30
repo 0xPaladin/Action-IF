@@ -430,7 +430,7 @@ function App() {
   // Shared game-loading logic: loads definition, registers hooks, creates state,
   // and either delegates to a custom gui.js or renders the default terminal UI.
   const bootGame = useCallback(
-    async (gameId, opts = {}) =|&gt; {
+    async (gameId, opts = {}) => {
       const { isLoad = false, savedState = null, saveName = null } = opts;
 
       // Clean up any previous custom GUI
@@ -476,9 +476,9 @@ function App() {
           engine: engineRef.current,
           parser: parserRef.current,
           hookMod: hookModuleRef.current,
-          switchGame: (newGameId) =&gt; bootGame(newGameId, { isLoad: false }),
+          switchGame: (newGameId) => bootGame(newGameId, { isLoad: false }),
         });
-        const cleanup = guiMod.init?.(api) ?? guiMod.default?.(api) ?? (() =&gt; {});
+        const cleanup = guiMod.init?.(api) ?? guiMod.default?.(api) ?? (() => {});
         guiCleanupRef.current = cleanup;
         setUseCustomGui(true);
       } else {
@@ -538,7 +538,7 @@ function App() {
 
         // Load the default game
         await bootGame("sample-game");
-        timer = setTimeout(() =&gt; setIntroFaded(true), 30000);
+        timer = setTimeout(() => setIntroFaded(true), 30000);
       } catch (e) {
         setMessages([
           { type: "system", text: "Failed to load game: " + e.message },
@@ -547,7 +547,7 @@ function App() {
       setLoading(false);
     }
     init();
-    return () =&gt; clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [bootGame]);
 
   useEffect(() => {
