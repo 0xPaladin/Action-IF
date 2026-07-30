@@ -15,8 +15,11 @@ const html = htm.bind(h);
 import { getContext, processInput } from "/src/engine.js";
 import { parseInput } from "/src/parser.js";
 
-// Import custom GUI styles
-import "./gui.css";
+// Inject custom GUI styles via a <link> tag (plain ESM can't import CSS)
+const linkEl = document.createElement("link");
+linkEl.rel = "stylesheet";
+linkEl.href = "/games/custom-gui-demo/gui.css";
+document.head.appendChild(linkEl);
 
 // ---- Custom Components ----
 

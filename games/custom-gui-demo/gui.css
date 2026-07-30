@@ -20,6 +20,8 @@
     padding: 8px 16px;
     border-bottom: 1px solid #000;
     background: #fff;
+    position: relative;
+    z-index: 100;
 }
 
 .custom-header h1 {

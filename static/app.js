@@ -343,6 +343,7 @@ function buildGuiApi({
   parser,
   hookMod,
   switchGame,
+  root,
 }) {
   return {
     gameId,
@@ -353,7 +354,7 @@ function buildGuiApi({
     engine,
     parser,
     hookMod,
-    root: document.getElementById("root"),
+    root,
     helpers: {
       mergeDefinitions,
       serializeState,
@@ -425,7 +426,11 @@ function App() {
   const charModuleRef = useRef(null);
   const hookModuleRef = useRef(null);
   const guiCleanupRef = useRef(null);
+  const guiModRef = useRef(null);
+  const customGuiRootRef = useRef(null);
   const gameListRef = useRef([]);
+  const defRef = useRef(null);
+  const customHooksRef = useRef(null);
 
   // Shared game-loading logic: loads definition, registers hooks, creates state,
   // and either delegates to a custom gui.js or renders the default terminal UI.
@@ -438,6 +443,7 @@ function App() {
         guiCleanupRef.current();
         guiCleanupRef.current = null;
       }
+      guiModRef.current = null;
 
       const { def, customHooks } = await loadGameDefinition(gameId);
 
@@ -458,6 +464,8 @@ function App() {
       }
 
       gameRef.current = state;
+      defRef.current = def;
+      customHooksRef.current = customHooks;
       setGameState(state);
       setDefSrc(gameId);
       setActiveChar(0);
@@ -466,20 +474,8 @@ function App() {
       const guiMod = await tryLoadGui(gameId);
 
       if (guiMod) {
-        // Delegate rendering to the custom GUI
-        const api = buildGuiApi({
-          gameId,
-          gameList: gameListRef.current,
-          def,
-          customHooks,
-          state,
-          engine: engineRef.current,
-          parser: parserRef.current,
-          hookMod: hookModuleRef.current,
-          switchGame: (newGameId) => bootGame(newGameId, { isLoad: false }),
-        });
-        const cleanup = guiMod.init?.(api) ?? guiMod.default?.(api) ?? (() => {});
-        guiCleanupRef.current = cleanup;
+        // Store the module for the useEffect to init after the container div exists
+        guiModRef.current = guiMod;
         setUseCustomGui(true);
       } else {
         // Render the default terminal UI
@@ -509,6 +505,32 @@ function App() {
     },
     [],
   );
+
+  // Initialize custom GUI after the container div is in the DOM
+  useEffect(() => {
+    if (useCustomGui && guiModRef.current && customGuiRootRef.current) {
+      const api = buildGuiApi({
+        gameId: defSrc,
+        gameList: gameListRef.current,
+        def: defRef.current,
+        customHooks: customHooksRef.current,
+        state: gameRef.current,
+        engine: engineRef.current,
+        parser: parserRef.current,
+        hookMod: hookModuleRef.current,
+        switchGame: (newGameId) => bootGame(newGameId, { isLoad: false }),
+        root: customGuiRootRef.current,
+      });
+      const cleanup = guiModRef.current.init?.(api) ?? guiModRef.current.default?.(api) ?? (() => {});
+      guiCleanupRef.current = cleanup;
+    }
+    return () => {
+      if (guiCleanupRef.current) {
+        guiCleanupRef.current();
+        guiCleanupRef.current = null;
+      }
+    };
+  }, [useCustomGui, defSrc]);
 
   useEffect(() => {
     let timer;
@@ -812,9 +834,9 @@ function App() {
     </div>`;
   }
 
-  // If a custom gui.js has taken over the root element, render nothing.
+  // If a custom gui.js has taken over, render a container div for it
   if (useCustomGui) {
-    return null;
+    return html`<div ref=${customGuiRootRef} class="custom-gui-root" style="height:100vh;"></div>`;
   }
 
   const crew = gameState?.crew;
