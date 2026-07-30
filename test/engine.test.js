@@ -540,3 +540,158 @@ describe("toggleitem command", () => {
     expect(result.message).toContain("only change gear");
   });
 });
+
+describe("Level Up", () => {
+  function makeLevelUpState() {
+    return createGame({
+      characters: [
+        { name: "Luna", xp: 8, actions: { Muscle: 2, Sway: 1 } },
+      ],
+      stunts: [
+        { id: "quick_reflexes", name: "Quick Reflexes", description: "React faster.", tags: ["combat"] },
+        { id: "shadow_step", name: "Shadow Step", description: "Move unseen.", tags: ["stealth"] },
+      ],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+  }
+
+  test("handleLevelUp returns error when XP < 8", () => {
+    const state = createGame({
+      characters: [{ name: "Luna", xp: 5 }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+    const result = processInput(state, { type: "levelup" }, 0);
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("needs 8 XP");
+  });
+
+  test("handleLevelUp creates choice scene with 2 options", () => {
+    const state = makeLevelUpState();
+    const result = processInput(state, { type: "levelup" }, 0);
+    expect(result.type).toBe("scene_start");
+    expect(result.sceneId).toBe("_levelup_choice:0");
+    expect(result.context.type).toBe("scene");
+    expect(result.context.options).toHaveLength(2);
+    expect(result.context.options[0].text).toBe("Improve an Action");
+    expect(result.context.options[1].text).toBe("Add a Stunt");
+  });
+
+  test("handleLevelUp creates action list scene with upgradeable actions", () => {
+    const state = makeLevelUpState();
+    processInput(state, { type: "levelup" }, 0);
+    // Select "Improve an Action" (option 0)
+    const result = processInput(state, { type: "select", index: 0 }, 0);
+    expect(result.type).toBe("scene_start");
+    expect(result.sceneId).toBe("_levelup_actions:0");
+    expect(result.context.options.length).toBeGreaterThan(0);
+    // Should include actions with rating < 4 (Muscle=2, Sway=1, and all others at 0)
+    const optionTexts = result.context.options.map((o) => o.text);
+    expect(optionTexts.some((t) => t.includes("Muscle"))).toBe(true);
+    expect(optionTexts.some((t) => t.includes("Sway"))).toBe(true);
+  });
+
+  test("handleLevelUp creates stunt list scene with available stunts", () => {
+    const state = makeLevelUpState();
+    processInput(state, { type: "levelup" }, 0);
+    // Select "Add a Stunt" (option 1)
+    const result = processInput(state, { type: "select", index: 1 }, 0);
+    expect(result.type).toBe("scene_start");
+    expect(result.sceneId).toBe("_levelup_stunts:0");
+    expect(result.context.options).toHaveLength(2);
+    const optionTexts = result.context.options.map((o) => o.text);
+    expect(optionTexts.some((t) => t.includes("Quick Reflexes"))).toBe(true);
+    expect(optionTexts.some((t) => t.includes("Shadow Step"))).toBe(true);
+  });
+
+  test("selecting an action option upgrades the action and deducts XP", () => {
+    const state = makeLevelUpState();
+    processInput(state, { type: "levelup" }, 0);
+    processInput(state, { type: "select", index: 0 }, 0);
+    // Now in the actions scene. Find the Muscle option (rating 2 → 3)
+    const actionsScene = state.scenes.find((s) => s.id === "_levelup_actions:0");
+    const muscleIdx = actionsScene.options.findIndex((o) => o.text.includes("Muscle"));
+    const result = processInput(state, { type: "select", index: muscleIdx }, 0);
+    expect(result.type).toBe("scene_end");
+    expect(state.characters[0].actions.Muscle).toBe(3);
+    expect(state.characters[0].xp).toBe(0);
+    expect(state.activeScene).toBeNull();
+  });
+
+  test("selecting a stunt option adds the stunt and deducts XP", () => {
+    const state = makeLevelUpState();
+    processInput(state, { type: "levelup" }, 0);
+    processInput(state, { type: "select", index: 1 }, 0);
+    // Now in the stunts scene. Select "Quick Reflexes" (option 0)
+    const result = processInput(state, { type: "select", index: 0 }, 0);
+    expect(result.type).toBe("scene_end");
+    expect(state.characters[0].stunts).toHaveLength(1);
+    expect(state.characters[0].stunts[0].id).toBe("quick_reflexes");
+    expect(state.characters[0].xp).toBe(0);
+    expect(state.activeScene).toBeNull();
+  });
+
+  test("levelup command works via parser", () => {
+    const state = makeLevelUpState();
+    const cmd = parseInput("levelup");
+    expect(cmd.type).toBe("levelup");
+    const result = processInput(state, cmd, 0);
+    expect(result.type).toBe("scene_start");
+    expect(result.sceneId).toBe("_levelup_choice:0");
+  });
+
+  test("levelup command still works via downtime for backward compat", () => {
+    const state = makeLevelUpState();
+    const cmd = parseInput("levelup Muscle");
+    expect(cmd.type).toBe("downtime");
+    expect(cmd.action).toBe("levelup");
+    expect(cmd.param).toBe("Muscle");
+  });
+
+  test("gameStunts is populated from definition", () => {
+    const state = makeLevelUpState();
+    expect(state.gameStunts).toHaveLength(2);
+    expect(state.gameStunts[0].id).toBe("quick_reflexes");
+    expect(state.gameStunts[1].id).toBe("shadow_step");
+  });
+
+  test("stunt list excludes stunts character already has", () => {
+    const state = createGame({
+      characters: [
+        {
+          name: "Luna",
+          xp: 8,
+          actions: { Muscle: 2 },
+          stunts: [{ id: "quick_reflexes", name: "Quick Reflexes", tags: [], action: null, bonusDice: 0, bonusTicks: 0, bonusEffect: 0, substituteAction: null }],
+        },
+      ],
+      stunts: [
+        { id: "quick_reflexes", name: "Quick Reflexes", description: "React faster.", tags: ["combat"] },
+        { id: "shadow_step", name: "Shadow Step", description: "Move unseen.", tags: ["stealth"] },
+      ],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+    processInput(state, { type: "levelup" }, 0);
+    processInput(state, { type: "select", index: 1 }, 0);
+    // Should only show shadow_step, not quick_reflexes
+    expect(state.scenes.find((s) => s.id === "_levelup_stunts:0").options).toHaveLength(1);
+    expect(state.scenes.find((s) => s.id === "_levelup_stunts:0").options[0].hooks.stuntId).toBe("shadow_step");
+  });
+});

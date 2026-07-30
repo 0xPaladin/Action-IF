@@ -57,6 +57,7 @@ import {
   addStunt as charAddStunt,
   setLoadLevel,
   getAvailableItems,
+  ACTION_ACTIONS,
 } from "./character.js";
 import { createItem } from "./item.js";
 import { createStunt } from "./stunt.js";
@@ -133,6 +134,7 @@ export function createGame(definition) {
       def.tags || [],
       def.effects || {},
     );
+    state.gameStunts.push(stuntCache[def.id]);
   }
 
   for (const def of definition.characters || []) {
@@ -149,6 +151,8 @@ export function createGame(definition) {
     if (def.actionDots) assignActionDots(char, def.actionDots);
     if (def.aspects) char.aspects = [...def.aspects];
     if (def.items) char.items = [...def.items];
+    if (def.xp) char.xp = def.xp;
+    if (def.stuntChoices) char.stuntChoices = [...def.stuntChoices];
     for (const sDef of def.stunts || []) {
       if (typeof sDef === "string") {
         if (stuntCache[sDef]) charAddStunt(char, stuntCache[sDef]);
@@ -566,6 +570,193 @@ export function getContext(state) {
   return ctx;
 }
 
+// ---- Level-Up Scene Generation ----
+
+const LEVEL_UP_COST = 8;
+
+/**
+ * Check if a character has at least one upgradeable action or available stunt.
+ */
+function canLevelUp(state, characterIndex) {
+  const char = state.characters[characterIndex];
+  if (!char) return false;
+  if ((char.xp || 0) < LEVEL_UP_COST) return false;
+
+  const hasAction = ACTION_ACTIONS.some((a) => (char.actions[a] || 0) < 4);
+  if (hasAction) return true;
+
+  const hasStunt = getAvailableStuntsForLevelUp(state, char).length > 0;
+  return hasStunt;
+}
+
+/**
+ * Get the list of stunts available for a character to gain via level-up.
+ * Uses stuntChoices first, falls back to all game stunts minus known ones.
+ */
+function getAvailableStuntsForLevelUp(state, char) {
+  const choices = char.stuntChoices || [];
+  if (choices.length > 0) {
+    return choices.filter((s) => !char.stunts.some((hs) => hs.id === s.id));
+  }
+  return (state.gameStunts || []).filter(
+    (s) => !char.stunts.some((hs) => hs.id === s.id),
+  );
+}
+
+/**
+ * Create the top-level "Level Up" choice dialogue scene.
+ */
+function createLevelUpChoiceScene(state, characterIndex) {
+  const char = state.characters[characterIndex];
+  const sceneId = `_levelup_choice:${characterIndex}`;
+
+  const scene = createScene(
+    sceneId,
+    "dialogue",
+    `${char.name} has ${char.xp} XP. Choose how to advance:`,
+    [],
+    null,
+    null,
+    null,
+    false,
+  );
+
+  scene.options = [
+    {
+      text: "Improve an Action",
+      setFlag: null,
+      triggerScene: `_levelup_actions:${characterIndex}`,
+      condition: null,
+      tickFactionClock: null,
+      hooks: null,
+    },
+    {
+      text: "Add a Stunt",
+      setFlag: null,
+      triggerScene: `_levelup_stunts:${characterIndex}`,
+      condition: null,
+      tickFactionClock: null,
+      hooks: null,
+    },
+  ];
+
+  return scene;
+}
+
+/**
+ * Create the "Improve an Action" sub-scene with one option per upgradeable action.
+ */
+function createLevelUpActionsScene(state, characterIndex) {
+  const char = state.characters[characterIndex];
+  const sceneId = `_levelup_actions:${characterIndex}`;
+
+  const scene = createScene(
+    sceneId,
+    "dialogue",
+    `Choose an action to improve (costs ${LEVEL_UP_COST} XP):`,
+    [],
+    null,
+    null,
+    null,
+    false,
+  );
+
+  scene.options = ACTION_ACTIONS.filter((a) => (char.actions[a] || 0) < 4).map(
+    (actionName) => ({
+      text: `${actionName}: ${char.actions[actionName]} → ${char.actions[actionName] + 1}`,
+      setFlag: null,
+      triggerScene: null,
+      condition: null,
+      tickFactionClock: null,
+      hooks: {
+        type: "level_up_action",
+        characterIndex,
+        action: actionName,
+      },
+    }),
+  );
+
+  return scene;
+}
+
+/**
+ * Create the "Add a Stunt" sub-scene with one option per available stunt.
+ */
+function createLevelUpStuntsScene(state, characterIndex) {
+  const char = state.characters[characterIndex];
+  const sceneId = `_levelup_stunts:${characterIndex}`;
+
+  const scene = createScene(
+    sceneId,
+    "dialogue",
+    `Choose a stunt to gain (costs ${LEVEL_UP_COST} XP):`,
+    [],
+    null,
+    null,
+    null,
+    false,
+  );
+
+  const available = getAvailableStuntsForLevelUp(state, char);
+
+  scene.options = available.map((stunt) => ({
+    text: `${stunt.name} — ${stunt.description}`,
+    setFlag: null,
+    triggerScene: null,
+    condition: null,
+    tickFactionClock: null,
+    hooks: {
+      type: "level_up_stunt",
+      characterIndex,
+      stuntId: stunt.id,
+    },
+  }));
+
+  return scene;
+}
+
+/**
+ * Handle the "levelup" command — creates the level-up scene chain dynamically.
+ */
+export function handleLevelUp(state, characterIndex) {
+  const char = state.characters[characterIndex];
+  if (!char) {
+    return { type: "error", message: "Invalid character." };
+  }
+
+  if ((char.xp || 0) < LEVEL_UP_COST) {
+    return {
+      type: "error",
+      message: `${char.name} needs ${LEVEL_UP_COST} XP to level up, has ${char.xp || 0}.`,
+    };
+  }
+
+  if (!canLevelUp(state, characterIndex)) {
+    return {
+      type: "error",
+      message: `${char.name} has nothing to level up (all actions at max and no stunts available).`,
+    };
+  }
+
+  // Create the three level-up scenes and add them to state
+  const choiceScene = createLevelUpChoiceScene(state, characterIndex);
+  const actionsScene = createLevelUpActionsScene(state, characterIndex);
+  const stuntsScene = createLevelUpStuntsScene(state, characterIndex);
+
+  addScene(state, choiceScene);
+  addScene(state, actionsScene);
+  addScene(state, stuntsScene);
+
+  setActiveScene(state, choiceScene.id);
+
+  return {
+    type: "scene_start",
+    sceneId: choiceScene.id,
+    sceneFiction: choiceScene.fiction,
+    context: getContext(state),
+  };
+}
+
 export function processInput(state, command, characterIndex = 0) {
   const activeScene = getActiveScene(state);
 
@@ -585,6 +776,7 @@ function processSceneInput(state, scene, command, characterIndex) {
       case "save":
       case "load":
       case "saves":
+      case "levelup":
         return handleInfoCommand(state, command, characterIndex);
       default:
         return { type: "error", message: "Use a number to select an option." };
@@ -649,6 +841,9 @@ function processLocationInput(state, command, characterIndex) {
 
     case "downtime":
       return handleDowntime(state, command, characterIndex);
+
+    case "levelup":
+      return handleLevelUp(state, characterIndex);
 
     case "gm":
       return handleGmCommand(state, command, characterIndex);
@@ -1404,6 +1599,8 @@ function handleInfoCommand(state, command, characterIndex) {
       return { type: "saves" };
     case "loadlevel":
       return handleLoadLevel(state, command, characterIndex);
+    case "levelup":
+      return handleLevelUp(state, characterIndex);
     default:
 return { type: "error", message: "Unknown command." };
   }
@@ -1434,7 +1631,7 @@ function handleHelp(state) {
   lines.push("• saves — list saved games");
   lines.push("• load [name] — load a saved game");
   lines.push("• loadlevel <light|normal|heavy|N> — set max load (drops excess items)");
-  lines.push("• levelup <action|stunt> — spend 8 XP to upgrade an action or gain a stunt");
+  lines.push("• levelup — spend 8 XP to improve an action or gain a stunt (opens a choice scene)");
   lines.push("• project <id> — downtime: advance a project clock (costs 1 activity)");
   lines.push("• recover — downtime: heal body, clear conditions (costs 1 activity)");
   lines.push("• train — downtime: gain 1 XP (costs 1 activity)");

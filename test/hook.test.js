@@ -510,3 +510,127 @@ describe("Tier 3 hooks", () => {
     expect(resolveHook(state, { type: "modifyAction", action: "Study", delta: 1, characterIndex: 5 })).toBeNull();
   });
 });
+
+describe("Level-up hooks", () => {
+  test("level_up_action deducts XP and increments action rating", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8, actions: { Muscle: 1 } }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const char = state.characters[0];
+    expect(char.actions.Muscle).toBe(1);
+    expect(char.xp).toBe(8);
+
+    const result = resolveHook(state, { type: "level_up_action", characterIndex: 0, action: "Muscle" });
+    expect(result.type).toBe("levelup");
+    expect(result.choice).toBe("action");
+    expect(result.action).toBe("Muscle");
+    expect(result.from).toBe(1);
+    expect(result.to).toBe(2);
+    expect(char.actions.Muscle).toBe(2);
+    expect(char.xp).toBe(0);
+  });
+
+  test("level_up_action errors for insufficient XP", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 5, actions: { Muscle: 1 } }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_action", characterIndex: 0, action: "Muscle" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("needs 8 XP");
+    expect(state.characters[0].xp).toBe(5);
+  });
+
+  test("level_up_action errors for maxed action", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8, actions: { Muscle: 4 } }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_action", characterIndex: 0, action: "Muscle" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("already at max");
+    expect(state.characters[0].actions.Muscle).toBe(4);
+  });
+
+  test("level_up_action errors for unknown action", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8 }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_action", characterIndex: 0, action: "Bogus" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("Unknown action");
+  });
+
+  test("level_up_action returns null for invalid character", () => {
+    const state = createGameState();
+    expect(resolveHook(state, { type: "level_up_action", characterIndex: 5, action: "Muscle" })).toBeNull();
+  });
+
+  test("level_up_stunt deducts XP and adds stunt from gameStunts", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8 }],
+      stunts: [{ id: "quick_reflexes", name: "Quick Reflexes", description: "React faster.", tags: ["combat"] }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const char = state.characters[0];
+    expect(char.stunts).toHaveLength(0);
+    expect(char.xp).toBe(8);
+
+    const result = resolveHook(state, { type: "level_up_stunt", characterIndex: 0, stuntId: "quick_reflexes" });
+    expect(result.type).toBe("levelup");
+    expect(result.choice).toBe("stunt");
+    expect(result.stuntName).toBe("Quick Reflexes");
+    expect(char.stunts).toHaveLength(1);
+    expect(char.stunts[0].id).toBe("quick_reflexes");
+    expect(char.xp).toBe(0);
+  });
+
+  test("level_up_stunt errors for insufficient XP", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 5 }],
+      stunts: [{ id: "quick_reflexes", name: "Quick Reflexes", description: "React faster.", tags: ["combat"] }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_stunt", characterIndex: 0, stuntId: "quick_reflexes" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("needs 8 XP");
+    expect(state.characters[0].xp).toBe(5);
+  });
+
+  test("level_up_stunt errors for missing stunt", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8 }],
+      stunts: [],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_stunt", characterIndex: 0, stuntId: "missing" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("not found");
+  });
+
+  test("level_up_stunt errors if character already has the stunt", () => {
+    const state = createGame({
+      characters: [{ name: "Test", xp: 8, stunts: [{ id: "quick_reflexes", name: "Quick Reflexes", tags: [], action: null, bonusDice: 0, bonusTicks: 0, bonusEffect: 0, substituteAction: null }] }],
+      stunts: [{ id: "quick_reflexes", name: "Quick Reflexes", description: "React faster.", tags: ["combat"] }],
+      locations: [{ id: "room1", name: "Room", description: "desc", links: [], actions: [] }],
+      startLocation: "room1",
+    });
+    const result = resolveHook(state, { type: "level_up_stunt", characterIndex: 0, stuntId: "quick_reflexes" });
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("already has");
+  });
+
+  test("level_up_stunt returns null for invalid character", () => {
+    const state = createGameState();
+    expect(resolveHook(state, { type: "level_up_stunt", characterIndex: 5, stuntId: "x" })).toBeNull();
+  });
+});

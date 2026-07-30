@@ -10,7 +10,7 @@ import { getAvailableItems } from "/src/character.js";
 // ---- Helpers ----
 
 // Deep merge game definition fragments: arrays concatenate, objects merge.
-function mergeDefinitions(...defs) {
+export function mergeDefinitions(...defs) {
   const result = {};
   for (const def of defs) {
     if (!def) continue;
@@ -28,7 +28,7 @@ function mergeDefinitions(...defs) {
 }
 
 // Load a game from a folder: fetch all JSON files, merge, load custom hooks.
-async function loadGameDefinition(gameId) {
+export async function loadGameDefinition(gameId) {
   const filesRes = await fetch(`/api/games/${gameId}/files`);
   const { files } = await filesRes.json();
   const defs = await Promise.all(
@@ -56,7 +56,7 @@ function abbreviate(text, max = 50) {
 }
 
 // Build a human-friendly one-liner from an engine result.
-function formatTypeLabel(result) {
+export function formatTypeLabel(result) {
   switch (result.type) {
     case "transition":
       return `${result.fromName} → ${result.toName}`;
@@ -126,6 +126,8 @@ function formatTypeLabel(result) {
     case "downtime_result":
     case "gm_result":
       return result.text || "";
+    case "levelup":
+      return result.text || "";
     case "save":
       return `Saving "${result.name || "autosave"}"...`;
     case "load":
@@ -163,7 +165,7 @@ function getChallengeFullIdx(state, challengeId) {
 }
 
 // Render a context object to plain text for non-interactive logs.
-function contextToText(ctx) {
+export function contextToText(ctx) {
   if (!ctx) return "";
   if (ctx.type === "location") {
     let t = `\n${ctx.name}\n${ctx.description}`;
@@ -215,12 +217,12 @@ function fmtTime(ts) {
 }
 
 // Deep clone game state for persistence.
-function serializeState(state) {
+export function serializeState(state) {
   return JSON.parse(JSON.stringify(state));
 }
 
 // Overlay saved mutable data onto a freshly created game state.
-function restoreState(fresh, saved) {
+export function restoreState(fresh, saved) {
   fresh.currentLocation = saved.currentLocation;
   fresh.activeScene = saved.activeScene;
   fresh.flags = saved.flags || {};
@@ -235,6 +237,7 @@ function restoreState(fresh, saved) {
   fresh.assistBonusDice = saved.assistBonusDice || 0;
   fresh.protectTargetIndex = saved.protectTargetIndex ?? null;
   fresh.nextActionChoice = saved.nextActionChoice || null;
+  fresh.gameStunts = saved.gameStunts || [];
 
   if (fresh.crew && saved.crew) {
     Object.assign(fresh.crew, saved.crew);
@@ -319,6 +322,74 @@ function restoreState(fresh, saved) {
 
 // ---- Components ----
 
+// Try to load a per-game custom GUI module. Returns the module or null.
+async function tryLoadGui(gameId) {
+  try {
+    const mod = await import(`/games/${gameId}/gui.js`);
+    return mod;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Build the API object passed to a custom gui.js module.
+function buildGuiApi({
+  gameId,
+  gameList,
+  def,
+  customHooks,
+  state,
+  engine,
+  parser,
+  hookMod,
+  switchGame,
+}) {
+  return {
+    gameId,
+    gameList,
+    definition: def,
+    customHooks,
+    state,
+    engine,
+    parser,
+    hookMod,
+    root: document.getElementById("root"),
+    helpers: {
+      mergeDefinitions,
+      serializeState,
+      restoreState,
+      loadGameDefinition,
+    },
+    saveLoad: {
+      save: async (name, st) => {
+        const ser = serializeState(st);
+        ser._defSrc = gameId;
+        const r = await fetch(`/api/save/${encodeURIComponent(name)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: ser }),
+        });
+        return r.json();
+      },
+      load: async (name) => {
+        const r = await fetch(`/api/load/${encodeURIComponent(name)}`);
+        return r.json();
+      },
+      list: async () => {
+        const r = await fetch("/api/saves");
+        return r.json();
+      },
+      del: async (name) => {
+        const r = await fetch(`/api/save/${encodeURIComponent(name)}`, {
+          method: "DELETE",
+        });
+        return r.json();
+      },
+    },
+    switchGame,
+  };
+}
+
 // Root application component: manages state, messaging, and save/load.
 function App() {
   const [gameState, setGameState] = useState(null);
@@ -346,12 +417,98 @@ function App() {
   const [mapZoneId, setMapZoneId] = useState(null);
   const mapDropdownRef = useRef(null);
   const [gameList, setGameList] = useState([]);
+  const [useCustomGui, setUseCustomGui] = useState(false);
 
   const engineRef = useRef(null);
   const parserRef = useRef(null);
   const gameRef = useRef(null);
   const charModuleRef = useRef(null);
   const hookModuleRef = useRef(null);
+  const guiCleanupRef = useRef(null);
+  const gameListRef = useRef([]);
+
+  // Shared game-loading logic: loads definition, registers hooks, creates state,
+  // and either delegates to a custom gui.js or renders the default terminal UI.
+  const bootGame = useCallback(
+    async (gameId, opts = {}) =|&gt; {
+      const { isLoad = false, savedState = null, saveName = null } = opts;
+
+      // Clean up any previous custom GUI
+      if (guiCleanupRef.current) {
+        guiCleanupRef.current();
+        guiCleanupRef.current = null;
+      }
+
+      const { def, customHooks } = await loadGameDefinition(gameId);
+
+      // Register custom hooks before createGame
+      if (customHooks && hookModuleRef.current) {
+        for (const [id, fn] of Object.entries(customHooks)) {
+          if (typeof fn === "function") {
+            hookModuleRef.current.registerHook(id, fn);
+          }
+        }
+      }
+
+      const state = engineRef.current.createGame(def);
+
+      // If loading a saved game, overlay saved state
+      if (isLoad && savedState) {
+        restoreState(state, savedState);
+      }
+
+      gameRef.current = state;
+      setGameState(state);
+      setDefSrc(gameId);
+      setActiveChar(0);
+
+      // Try to load a custom gui.js for this game
+      const guiMod = await tryLoadGui(gameId);
+
+      if (guiMod) {
+        // Delegate rendering to the custom GUI
+        const api = buildGuiApi({
+          gameId,
+          gameList: gameListRef.current,
+          def,
+          customHooks,
+          state,
+          engine: engineRef.current,
+          parser: parserRef.current,
+          hookMod: hookModuleRef.current,
+          switchGame: (newGameId) =&gt; bootGame(newGameId, { isLoad: false }),
+        });
+        const cleanup = guiMod.init?.(api) ?? guiMod.default?.(api) ?? (() =&gt; {});
+        guiCleanupRef.current = cleanup;
+        setUseCustomGui(true);
+      } else {
+        // Render the default terminal UI
+        setUseCustomGui(false);
+        if (!isLoad) {
+          setMessages([
+            {
+              type: "system",
+              text: "Welcome to Action-IF — Charge SRD Interactive Fiction",
+              intro: true,
+            },
+            {
+              type: "system",
+              text: 'Type a command or click an option. Try "help" for basics.',
+              intro: true,
+            },
+            { type: "context", context: engineRef.current.getContext(state) },
+          ]);
+        } else {
+          setMessages([
+            { type: "system", text: `Loaded: ${opts.saveName || "autosave"}` },
+            { type: "divider" },
+            { type: "context", context: engineRef.current.getContext(state) },
+          ]);
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let timer;
@@ -373,41 +530,15 @@ function App() {
           const gamesRes = await fetch("/api/games");
           const { games } = await gamesRes.json();
           setGameList(games);
+          gameListRef.current = games;
         } catch (e) {
           setGameList([]);
+          gameListRef.current = [];
         }
 
         // Load the default game
-        const gameId = "sample-game";
-        const { def, customHooks } = await loadGameDefinition(gameId);
-
-        // Register custom hooks before createGame
-        if (customHooks && hookMod) {
-          for (const [id, fn] of Object.entries(customHooks)) {
-            if (typeof fn === "function") {
-              hookMod.registerHook(id, fn);
-            }
-          }
-        }
-
-        const state = engine.createGame(def);
-        gameRef.current = state;
-        setGameState(state);
-        setDefSrc(gameId);
-        setMessages([
-          {
-            type: "system",
-            text: "Welcome to Action-IF — Charge SRD Interactive Fiction",
-            intro: true,
-          },
-          {
-            type: "system",
-            text: 'Type a command or click an option. Try "help" for basics.',
-            intro: true,
-          },
-          { type: "context", context: engine.getContext(state) },
-        ]);
-        timer = setTimeout(() => setIntroFaded(true), 30000);
+        await bootGame("sample-game");
+        timer = setTimeout(() =&gt; setIntroFaded(true), 30000);
       } catch (e) {
         setMessages([
           { type: "system", text: "Failed to load game: " + e.message },
@@ -416,8 +547,8 @@ function App() {
       setLoading(false);
     }
     init();
-    return () => clearTimeout(timer);
-  }, []);
+    return () =&gt; clearTimeout(timer);
+  }, [bootGame]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -482,6 +613,9 @@ function App() {
   // Process a parsed engine command, append result + fresh context to the log.
   const processCommand = useCallback(
     (cmd, inputText) => {
+      // When a custom GUI is active, the App doesn't process commands.
+      if (useCustomGui) return;
+
       const state = gameRef.current;
       if (!state || !engineRef.current) return;
 
@@ -533,28 +667,8 @@ function App() {
           .then(async (data) => {
             if (!data.state) return;
             const gameId = data.state._defSrc || defSrc;
-            const { def, customHooks } = await loadGameDefinition(gameId);
-            if (customHooks && hookModuleRef.current) {
-              for (const [id, fn] of Object.entries(customHooks)) {
-                if (typeof fn === "function") {
-                  hookModuleRef.current.registerHook(id, fn);
-                }
-              }
-            }
-            const fresh = engineRef.current.createGame(def);
-            restoreState(fresh, data.state);
-            gameRef.current = fresh;
-            setDefSrc(gameId);
+            await bootGame(gameId, { isLoad: true, savedState: data.state, saveName: name });
             setLastSaveName(name);
-            setGameState({ ...fresh });
-            setMessages([
-              { type: "system", text: `Loaded: ${name}` },
-              { type: "divider" },
-              {
-                type: "context",
-                context: engineRef.current.getContext(fresh),
-              },
-            ]);
           })
           .catch((e) => console.error("Load failed:", e));
       }
@@ -588,7 +702,7 @@ function App() {
       setGameState({ ...state });
       setMessages(filtered);
     },
-    [messages, activeChar, defSrc, refreshSaves],
+    [messages, activeChar, defSrc, refreshSaves, useCustomGui],
   );
 
   // Parse raw input and dispatch to processCommand.
@@ -646,63 +760,26 @@ function App() {
         if (!data.state) return;
 
         const gameId = data.state._defSrc || defSrc;
-        const { def, customHooks } = await loadGameDefinition(gameId);
-        if (customHooks && hookModuleRef.current) {
-          for (const [id, fn] of Object.entries(customHooks)) {
-            if (typeof fn === "function") {
-              hookModuleRef.current.registerHook(id, fn);
-            }
-          }
-        }
-        const fresh = engineRef.current.createGame(def);
-        restoreState(fresh, data.state);
-        gameRef.current = fresh;
-        setDefSrc(gameId);
+        await bootGame(gameId, { isLoad: true, savedState: data.state, saveName: name });
         setLastSaveName(name);
-        setGameState({ ...fresh });
-        setMessages([
-          { type: "system", text: `Loaded: ${name}` },
-          { type: "divider" },
-          { type: "context", context: engineRef.current.getContext(fresh) },
-        ]);
         setShowModal(false);
       } catch (e) {
         console.error("Load failed:", e);
       }
     },
-    [defSrc],
+    [defSrc, bootGame],
   );
 
   const handleGameSelect = useCallback(
     async (gameId) => {
       try {
-        const { def, customHooks } = await loadGameDefinition(gameId);
-        if (customHooks && hookModuleRef.current) {
-          for (const [id, fn] of Object.entries(customHooks)) {
-            if (typeof fn === "function") {
-              hookModuleRef.current.registerHook(id, fn);
-            }
-          }
-        }
-        const fresh = engineRef.current.createGame(def);
-        gameRef.current = fresh;
-        setDefSrc(gameId);
-        setActiveChar(0);
-        setGameState({ ...fresh });
-        setMessages([
-          {
-            type: "system",
-            text: `Loaded game: ${gameId}`,
-          },
-          { type: "divider" },
-          { type: "context", context: engineRef.current.getContext(fresh) },
-        ]);
+        await bootGame(gameId);
         setShowModal(false);
       } catch (e) {
         console.error("Game load failed:", e);
       }
     },
-    [],
+    [bootGame],
   );
 
   const handleDelete = useCallback(
@@ -733,6 +810,11 @@ function App() {
     return html`<div class="app">
       <div class="output"><div class="msg msg-system">Loading...</div></div>
     </div>`;
+  }
+
+  // If a custom gui.js has taken over the root element, render nothing.
+  if (useCustomGui) {
+    return null;
   }
 
   const crew = gameState?.crew;
@@ -1476,34 +1558,20 @@ function SidePanel({
   const hasDowntime = char && (char.downtimeRemaining || 0) > 0;
   const canLevelUp = char && (char.xp || 0) >= 8;
 
-  const trainButtons =
+  // Check if there's at least one upgradeable action or available stunt
+  const hasUpgradeableAction =
+    char && Object.values(char.actions || {}).some((v) => v < 4);
+  const availableStunts =
     char &&
-    Object.entries(char.actions || {})
-      .filter(([, v]) => v < 4)
-      .map(
-        ([name]) =>
-          html`<button
-            class="btn"
-            style="font-size:11px;padding:2px 6px;"
-            key=${name}
-            onClick=${() =>
-              onCommand({ type: "downtime", action: "levelup", param: name })}
-          >
-            ${name}
-          </button>`,
-      );
-
-  const stuntButton =
-    char && (char.stuntChoices || []).length
-      ? html`<button
-          class="btn"
-          style="font-size:11px;padding:2px 6px;"
-          onClick=${() =>
-            onCommand({ type: "downtime", action: "levelup", param: "stunt" })}
-        >
-          Stunt
-        </button>`
-      : null;
+    (char.stuntChoices || []).length > 0
+      ? (char.stuntChoices || []).filter(
+          (s) => !char.stunts.some((hs) => hs.id === s.id),
+        )
+      : (state.gameStunts || []).filter(
+          (s) => !char?.stunts.some((hs) => hs.id === s.id),
+        );
+  const hasAvailableStunt = availableStunts.length > 0;
+  const canLevelUpFull = canLevelUp && (hasUpgradeableAction || hasAvailableStunt);
 
   const projectButtons =
     char &&
@@ -1669,6 +1737,19 @@ function SidePanel({
                       ${char.stunts.map((s) => s.name).join(", ")}
                     </div>`
                 : ""}
+              ${canLevelUpFull
+                ? html` <div
+                    style="margin-top:8px;border-top:1px solid #ccc;padding-top:6px;"
+                  >
+                    <button
+                      class="btn"
+                      style="font-size:11px;padding:2px 6px;"
+                      onClick=${() => onCommand({ type: "levelup" })}
+                    >
+                      Level Up (${char.xp} XP)
+                    </button>
+                  </div>`
+                : ""}
               ${hasDowntime
                 ? html` <div
                     class="sidebar-section"
@@ -1693,20 +1774,6 @@ function SidePanel({
                         Train (+1 XP)
                       </button>
                     </div>
-                    ${canLevelUp
-                      ? html` <div
-                            style="margin-top:4px;font-size:11px;font-weight:600;"
-                          >
-                            Level Up (${char.xp} XP):
-                          </div>
-                          <div class="options" style="flex-wrap:wrap;gap:3px;">
-                            ${trainButtons} ${stuntButton}
-                          </div>`
-                      : html`<div
-                          style="margin-top:4px;font-size:11px;color:#888;"
-                        >
-                          Train to earn XP (need 8 to level up).
-                        </div>`}
                     ${projectButtons.length
                       ? html` <div
                             style="margin-top:4px;font-size:11px;font-weight:600;"

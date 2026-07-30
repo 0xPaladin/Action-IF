@@ -1,0 +1,123 @@
+{
+  "name": "Custom GUI Demo",
+  "startLocation": "plaza",
+  "items": [
+    {
+      "id": "flashlight",
+      "name": "Flashlight",
+      "description": "A small LED flashlight. Useful in dark places.",
+      "load": 1,
+      "tags": ["dark", "utility"]
+    }
+  ],
+  "characters": [
+    {
+      "name": "Rook",
+      "actionDots": [1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
+      "items": ["flashlight"]
+    }
+  ],
+  "zones": [
+    {
+      "id": "town",
+      "type": "region",
+      "name": "Briarwood",
+      "description": "A quiet town at the edge of the Whispering Wood."
+    },
+    {
+      "id": "whispering_wood",
+      "type": "area",
+      "name": "Whispering Wood",
+      "description": "A dark forest where the trees seem to murmur.",
+      "parent": "town"
+    }
+  ],
+  "locations": [
+    {
+      "id": "plaza",
+      "name": "Town Plaza",
+      "description": "The central square of Briarwood. A stone fountain stands at the center.",
+      "parent": "town",
+      "links": [
+        { "targetId": "forest_entrance", "label": "Path to the Whispering Wood" }
+      ],
+      "actions": [
+        {
+          "id": "inspect_fountain",
+          "label": "Inspect the fountain",
+          "description": "Look closely at the old stone fountain.",
+          "hooks": { "type": "log", "text": "The fountain is dry and moss-covered." }
+        }
+      ]
+    },
+    {
+      "id": "forest_entrance",
+      "name": "Forest Entrance",
+      "description": "The trees grow thick here. It's getting darker.",
+      "parent": "whispering_wood",
+      "links": [
+        { "targetId": "plaza", "label": "Return to the plaza" }
+      ]
+    }
+  ],
+  "plotlines": [
+    {
+      "id": "intro_story",
+      "name": "The Missing Merchant",
+      "description": "A merchant has gone missing in the Whispering Wood.",
+      "scenes": [
+        {
+          "id": "meet_contact",
+          "type": "dialogue",
+          "fiction": "An old woman at the fountain approaches you. 'You look like someone who can handle themselves. My nephew went into those woods three days ago and never returned.'",
+          "tags": ["social", "urban"],
+          "options": [
+            {
+              "text": "I'll investigate the woods.",
+              "setFlag": "accepted_quest",
+              "triggerScene": "enter_woods"
+            },
+            {
+              "text": "I'm not interested.",
+              "setFlag": "declined_quest"
+            }
+          ]
+        },
+        {
+          "id": "enter_woods",
+          "type": "action",
+          "fiction": "The Whispering Wood lives up to its name. The trees creak and sway, though there's no wind.",
+          "tags": ["outdoor", "dark", "natural"],
+          "challenges": [
+            {
+              "id": "navigate",
+              "description": "Find your way deeper without getting lost",
+              "clockMax": 3,
+              "tags": ["mobility", "perception"],
+              "actions": [
+                {
+                  "actionName": "Sneak",
+                  "heat": 2,
+                  "consequences": {
+                    "description": "You trip over a root and twist your ankle.",
+                    "template": "harm",
+                    "params": { "amount": 1 }
+                  }
+                },
+                {
+                  "actionName": "Notice",
+                  "heat": 2,
+                  "consequences": {
+                    "description": "You miss a subtle trail marker.",
+                    "template": "tickClock",
+                    "params": { "amount": 1 }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

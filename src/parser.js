@@ -103,12 +103,15 @@ export function parseInput(text) {
     return { type: "toggleitem", itemId: equipMatch[2].trim() };
   }
 
-  // "levelup <action>" or "levelup stunt" — spend 8 XP to upgrade an action or gain a stunt
-  const levelupMatch = trimmed.match(/^levelup\s+(.+)$/);
+  // "levelup" or "levelup <action>" or "levelup stunt" — spend 8 XP to upgrade an action or gain a stunt
+  const levelupMatch = trimmed.match(/^levelup(?:\s+(.+))?$/);
   if (levelupMatch) {
-    const param = levelupMatch[1].trim();
-    const capped = param.charAt(0).toUpperCase() + param.slice(1).toLowerCase();
-    return { type: "downtime", action: "levelup", param: capped };
+    const param = levelupMatch[1];
+    if (param) {
+      const capped = param.charAt(0).toUpperCase() + param.slice(1).toLowerCase();
+      return { type: "downtime", action: "levelup", param: capped };
+    }
+    return { type: "levelup" };
   }
 
   // "project <id>" — downtime project (e.g. "project fortify_defenses")

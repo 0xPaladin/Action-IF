@@ -1,0 +1,218 @@
+/* =========================================================
+   Custom GUI styles — loaded by gui.js via import
+   ========================================================= */
+
+.custom-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background: #fff;
+    color: #000;
+}
+
+.custom-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid #000;
+    background: #fff;
+}
+
+.custom-header h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.custom-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 12px 16px;
+}
+
+.message-log {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 8px;
+}
+
+.message-log .msg {
+    margin-bottom: 4px;
+}
+
+.message-log .msg-player {
+    font-weight: bold;
+}
+
+.message-log .msg-player .prompt {
+    margin-right: 4px;
+}
+
+.message-log .msg-result {
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+}
+
+.context-view {
+    margin-bottom: 12px;
+}
+
+.input-area {
+    display: flex;
+    align-items: center;
+    border-top: 2px solid #000;
+    padding: 8px 0;
+    background: #fff;
+}
+
+.input-area .prompt {
+    margin-right: 8px;
+    font-weight: bold;
+    user-select: none;
+}
+
+.custom-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #000;
+    font: inherit;
+    font-size: 14px;
+}
+
+.custom-input::placeholder {
+    color: #999;
+}
+
+/* Custom GUI cards */
+.custom-main .card {
+    border: 1px solid #000;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.custom-main .card h2 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.custom-main .card h3 {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.custom-main .card h4 {
+    margin: 0 0 4px 0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.custom-main .card p {
+    margin: 0 0 8px 0;
+    white-space: pre-wrap;
+}
+
+.custom-main .section {
+    margin-top: 8px;
+}
+
+.custom-main .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.custom-main .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid #000;
+    font-size: 11px;
+    background: #fff;
+    color: #000;
+}
+
+/* Challenge block in custom GUI */
+.custom-main .challenge {
+    border: 1px solid #000;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+}
+
+.custom-main .challenge .clock {
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+/* Buttons in custom GUI */
+.custom-main .btn.small {
+    font-size: 11px;
+    padding: 2px 6px;
+}
+
+.custom-main .action-btn {
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+.custom-main .option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 4px;
+}
+
+.custom-main .option-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* Custom GUI sidebar (character sheet) */
+.custom-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 240px;
+    height: 100vh;
+    border-left: 2px solid #000;
+    padding: 12px 16px;
+    overflow-y: auto;
+    background: #fff;
+    z-index: 50;
+}
+
+.custom-sidebar .char-sheet h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.custom-sidebar .stats {
+    font-size: 12px;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.custom-sidebar .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px 8px;
+    font-size: 11px;
+}
+
+.custom-sidebar .action-name {
+    font-weight: bold;
+}
+
+.custom-sidebar .action-dots {
+    text-align: right;
+}

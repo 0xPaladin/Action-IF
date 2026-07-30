@@ -76,7 +76,7 @@ A game definition is a single object whose top-level keys are the building block
 
 **`startLocation`** *(string)* — the location ID the player wakes up in.
 
-**Characters** — `characters[]`. Each is a person with twelve action ratings (or a 12-integer `actionDots` array summing to 7), guard, body, conditions, items, stunts, XP, projects, and a downtime budget. Eight XP buys a level-up (raise an action or gain a stunt).
+**Characters** — `characters[]`. Each is a person with twelve action ratings (or a 12-integer `actionDots` array summing to 7), guard, body, conditions, items, stunts, XP, projects, and a downtime budget. Eight XP buys a level-up (raise an action or gain a stunt) via a dynamic scene-based encounter triggered by the `levelup` command or the sidebar button.
 
 **Items** — `items[]`. Carryable gear with load cost, tag-matched effects (`bonusDice`, `bonusTicks`, `bonusEffect`, `armor`, `substituteAction`), and two classification flags: `specialized` (only equippable by named characters) and `individual` (granted at runtime, never in loadout).
 
@@ -111,7 +111,7 @@ A game definition is a single object whose top-level keys are the building block
 
 **Mission config** *(optional, on a plotline)* — `patron`, `patronFaction`, `targetFaction`, `payoff` {rep, coin}, `baseHeat`, `engagementAction`, `tags`, a 4-segment `dangerClock`, and an `onComplete` hook. Completion auto-applies payoff, faction heat, patron favour, and ushers the crew into downtime.
 
-**Hooks** — the declarative glue. Wherever you would use a function to change game state — scene `onEnter`/`onExit`, challenge `onAct`/`onComplete`, location action `hooks`, mission `onComplete`, claim templates, dialogue options — pass a hook object (`{ type: "setFlag", flag: "done" }`) or an array of them. Built-in type IDs: `setFlag`, `clearFlag`, `tickClock`, `addRep`, `addCoin`, `addXp`, `spendCoin`, `setScene`, `encounter`, `log`, `adjustStatus`, `clearActiveScene`, `message`, `completePlotline`, `setLocation`, `rest`, `healHarm`, `engagement`, `completeMission`, `giveItem`, `takeItem`, `addCondition`, `removeCondition`, `clearConditions`, `dealHarm`, `resetGuard`, `addCharacterXp`, `moveNPC`, `removeNPC`, `addClock`, `removeClock`, `modifyAction`, `addMomentum`, `spendMomentum`. See [`games/example_game_objects.md`](games/example_game_objects.md#hook) for the full description of each. Register your own with `registerHook(type, handler)` from `hooks.js`.
+**Hooks** — the declarative glue. Wherever you would use a function to change game state — scene `onEnter`/`onExit`, challenge `onAct`/`onComplete`, location action `hooks`, mission `onComplete`, claim templates, dialogue options — pass a hook object (`{ type: "setFlag", flag: "done" }`) or an array of them. Built-in type IDs: `setFlag`, `clearFlag`, `tickClock`, `addRep`, `addCoin`, `addXp`, `spendCoin`, `setScene`, `encounter`, `log`, `adjustStatus`, `clearActiveScene`, `message`, `completePlotline`, `setLocation`, `rest`, `healHarm`, `engagement`, `completeMission`, `giveItem`, `takeItem`, `addCondition`, `removeCondition`, `clearConditions`, `dealHarm`, `resetGuard`, `addCharacterXp`, `moveNPC`, `removeNPC`, `addClock`, `removeClock`, `modifyAction`, `addMomentum`, `spendMomentum`, `level_up_action`, `level_up_stunt`. See [`games/example_game_objects.md`](games/example_game_objects.md#hook) for the full description of each. Register your own with `registerHook(type, handler)` from `hooks.js`.
 
 ### How It All Links Together
 
@@ -145,20 +145,21 @@ This section is for **engineers** — people who want to read, extend, or hack o
 ### Architecture
 
 ```
-Browser (Preact SPA)              Server (thin Bun)
-─────────────────────────          ──────────────────
-static/index.html     ────→       serves / (static/)
-static/app.js         ────→       serves /app.js
-static/style.css      ────→       serves /style.css
-import: src/*.js       ────→       serves /src/*.js
-import: games/*/game.json ────→   serves /games/*/*.json
-import: games/*/hooks.js ────→   serves /games/*/hooks.js
-GET  /api/games       ────→       lists game folder names
-GET  /api/games/:id/files ────→   lists JSON files in a game folder
-POST /api/save/:id    ────→       writes saves/:id.json
-GET  /api/load/:id    ────→       reads saves/:id.json
-GET  /api/saves       ────→       lists saves/:id.json
-DELETE /api/save/:id  ────→       removes a save
+Browser (Preact SPA — default / custom per-game)   Server (thin Bun)
+─────────────────────────────────────────          ──────────────────
+static/index.html     ────→                       serves / (static/)
+static/app.js         ────→                       serves /app.js
+static/style.css      ────→                       serves /style.css
+import: src/*.js       ────→                      serves /src/*.js
+import: games/*/game.json ────→                   serves /games/*/*.json
+import: games/*/hooks.js ────→                    serves /games/*/hooks.js
+import: games/*/gui.js  ────→                     serves /games/*/gui.js
+GET  /api/games       ────→                       lists game folder names
+GET  /api/games/:id/files ────→                   lists JSON files in a game folder
+POST /api/save/:id    ────→                       writes saves/:id.json
+GET  /api/load/:id    ────→                       reads saves/:id.json
+GET  /api/saves       ────→                       lists saves/:id.json
+DELETE /api/save/:id  ────→                       removes a save
 ```
 
 The browser is a single-page **Preact** app built on `htm` (no JSX, no compiler). The server is ~170 lines of Bun that serves static files, proxies `src/` and `games/`, and round-trips saved state to JSON files in `saves/`. All game state lives in the browser; the server is just persistence.
@@ -198,14 +199,17 @@ Action-IF/
 ├── static/
 │   ├── index.html      # importmap (preact, preact/hooks, htm), mounts <App>
 │   ├── style.css       # B&W terminal aesthetic — white bg, mono, minimal
-│   └── app.js          # all Preact components + the game loop
+│   └── app.js          # all Preact components + game loop + gui.js orchestrator
+├── games/
+│   ├── sample-game/
+│   │   └── game.json   # "Echoes in the Void" — the canonical example
+│   └── custom-gui-demo/
+│       ├── game.json   # Minimal game demonstrating the custom GUI pattern
+│       └── gui.js      # Example custom SPA (replaces default terminal UI)
 ├── test/               # *.test.js — one per module, runnable via `bun test`
 ├── rules/
 │   ├── charge_quick.md # the SRD reference the engine leans on
 │   └── TAG_SUGGESTIONS.md  # curated tag vocabulary (~55, ~5 per action)
-├── games/
-│   └── sample-game/
-│       └── game.json   # "Echoes in the Void" — the canonical example
 └── saves/              # runtime save files (gitignored)
 ```
 
@@ -216,6 +220,31 @@ Action-IF/
 - **One module per concern.** Each column of the Charge/SRD ruleset gets its own file with a focused API. `engine.js` is the only orchestrator — the single entry point for the game loop (`createGame`, `getContext`, `processInput`).
 - **Declarative over imperative.** Hooks are the centre of gravity: `{ type: "setFlag", flag: "x" }` works identically whether it fires on a scene exit, a challenge completion, a dialogue choice, or a claim template. Game authors shouldn't write functions unless they're doing something the vocabulary can't reach.
 - **Games are folders, not code.** A game is a directory of JSON plus an optional `hooks.js`. New content can be added to a shipped game without invalidating saves — `restoreState` overlays progress onto a freshly rebuilt world.
+
+### Custom GUI (gui.js)
+
+Any game folder can include a `gui.js` module to completely replace the default terminal UI with a custom SPA. When present, `app.js` detects it at load time, delegates rendering to it, and the default Preact components are not rendered.
+
+**Contract:** The module must export an `init(api)` or `default(api)` function. It receives:
+
+```js
+{
+  gameId,           // string — current game folder name
+  gameList,         // string[] — available game folder names
+  definition,       // object — merged game definition JSON
+  customHooks,      // object|null — hook handlers from hooks.js
+  state,            // object — current mutable game state
+  engine,           // module — engine.js
+  parser,           // module — parser.js
+  hookMod,          // module — hook.js
+  root,             // HTMLElement — #root element to render into
+  helpers:          // { mergeDefinitions, serializeState, restoreState, loadGameDefinition }
+  saveLoad:         // { save(name, state), load(name), list(), del(name) }
+  switchGame(id),   // load a different game
+}
+```
+
+The function may return a cleanup function (called before switching games or loading a save). See [`games/custom-gui-demo/gui.js`](games/custom-gui-demo/gui.js) for a working example using Preact + htm.
 
 ### Running
 

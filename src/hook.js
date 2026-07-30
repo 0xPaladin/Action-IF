@@ -18,6 +18,7 @@ import {
   addItem,
   removeItem,
   addXp,
+  addStunt as charAddStunt,
 } from "./character.js";
 import { startDowntime } from "./downtime.js";
 import { engagementRoll } from "./engagement.js";
@@ -481,4 +482,90 @@ registerHook("spendMomentum", (state, params) => {
   }
   spendMomentum(state, amount);
   return { type: "momentum_spent", amount, total: state.momentum };
+});
+
+registerHook("level_up_action", (state, params) => {
+  const charIndex = params.characterIndex ?? 0;
+  const char = (state.characters || [])[charIndex];
+  if (!char) return null;
+
+  const cost = params.cost || 8;
+  if ((char.xp || 0) < cost) {
+    return { type: "error", message: `${char.name} needs ${cost} XP to level up, has ${char.xp || 0}.` };
+  }
+
+  const actionName = params.action;
+  if (!actionName || char.actions[actionName] === undefined) {
+    return { type: "error", message: `Unknown action "${actionName}".` };
+  }
+
+  const current = char.actions[actionName];
+  if (current >= 4) {
+    return { type: "error", message: `${actionName} is already at max (4).` };
+  }
+
+  char.xp -= cost;
+  char.actions[actionName] = current + 1;
+
+  addLogEntry(state, {
+    type: "system",
+    text: `${char.name}'s ${actionName} increased: ${current} → ${current + 1}!`,
+  });
+
+  return {
+    type: "levelup",
+    character: char.name,
+    choice: "action",
+    action: actionName,
+    from: current,
+    to: current + 1,
+    xpRemaining: char.xp,
+  };
+});
+
+registerHook("level_up_stunt", (state, params) => {
+  const charIndex = params.characterIndex ?? 0;
+  const char = (state.characters || [])[charIndex];
+  if (!char) return null;
+
+  const cost = params.cost || 8;
+  if ((char.xp || 0) < cost) {
+    return { type: "error", message: `${char.name} needs ${cost} XP to level up, has ${char.xp || 0}.` };
+  }
+
+  const stuntId = params.stuntId;
+  if (!stuntId) {
+    return { type: "error", message: "No stunt ID specified." };
+  }
+
+  // Look up the stunt from gameStunts or character's stuntChoices
+  let stuntDef = (state.gameStunts || []).find((s) => s.id === stuntId);
+  if (!stuntDef) {
+    const choices = char.stuntChoices || [];
+    stuntDef = choices.find((s) => s.id === stuntId);
+  }
+  if (!stuntDef) {
+    return { type: "error", message: `Stunt "${stuntId}" not found.` };
+  }
+
+  // Check if character already has this stunt
+  if (char.stunts.some((s) => s.id === stuntId)) {
+    return { type: "error", message: `${char.name} already has the stunt "${stuntDef.name}".` };
+  }
+
+  char.xp -= cost;
+  charAddStunt(char, stuntDef);
+
+  addLogEntry(state, {
+    type: "system",
+    text: `${char.name} gained stunt: ${stuntDef.name}!`,
+  });
+
+  return {
+    type: "levelup",
+    character: char.name,
+    choice: "stunt",
+    stuntName: stuntDef.name,
+    xpRemaining: char.xp,
+  };
 });

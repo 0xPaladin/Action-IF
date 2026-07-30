@@ -25,6 +25,7 @@ export function createGameState() {
     npcs: [],
     npcsByLocation: {},
     items: [],
+    gameStunts: [],
     nextActionBonusDice: 0,
     assistBonusDice: 0,
     protectTargetIndex: null,
