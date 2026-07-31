@@ -1,3 +1,20 @@
+/**
+ * ### Crew System
+ *
+ * `crew.js` models the player crew (defined by the game creator). Crews have a description,
+ * coin, reputation, hold, upgrades, XP, and stunts. A crew stunt applies to **all characters**.
+ *
+ * API:
+ * - `createCrew(id, name, definition)` — creates a crew
+ * - `addRep(crew, amount)` — add reputation
+ * - `addCoin(crew, amount)` — add/remove coin
+ * - `addUpgrade(crew, upgradeId)` — add an upgrade
+ * - `hasUpgrade(crew, upgradeId)` — check if crew has an upgrade
+ * - `addCrewXp(crew, amount)` — add crew XP
+ * - `addCrewStunt(crew, stuntId)` — activate a stunt on the crew
+ * - `hasCrewStunt(crew, stuntId)` — check if stunt is active
+ * - `getCrewStunts(crew)` — get array of active stunt objects
+ */
 import { createStunt } from "./stunt.js";
 
 export function createCrew(id, name, definition = {}) {

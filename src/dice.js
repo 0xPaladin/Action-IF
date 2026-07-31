@@ -1,3 +1,10 @@
+/**
+ * ### Dice
+ *
+ * `dice.js` implements:
+ * - `rollDice(count)` → array of results
+ * - `interpretResults(roll)` → `{ crit, fullSuccess, partialSuccess, failure }`
+ */
 export function rollDice(count) {
   const results = [];
   for (let i = 0; i < count; i++) {

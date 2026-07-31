@@ -407,15 +407,15 @@
           "options": [
             {
               "text": "Explain engagement rolls",
-              "triggerDialogue": "engagement_detail"
+              "triggerScene": "engagement_detail"
             },
             {
               "text": "Explain challenge resolution",
-              "triggerDialogue": "challenge_detail"
+              "triggerScene": "challenge_detail"
             },
             {
               "text": "Explain mission payoff and heat",
-              "triggerDialogue": "payoff_detail"
+              "triggerScene": "payoff_detail"
             },
             { "text": "No, I've got it" }
           ]
@@ -427,15 +427,15 @@
           "options": [
             {
               "text": "Back to mission overview",
-              "triggerDialogue": "introduction"
+              "triggerScene": "introduction"
             },
             {
               "text": "Explain challenge resolution",
-              "triggerDialogue": "challenge_detail"
+              "triggerScene": "challenge_detail"
             },
             {
               "text": "Explain mission payoff and heat",
-              "triggerDialogue": "payoff_detail"
+              "triggerScene": "payoff_detail"
             }
           ]
         },
@@ -446,15 +446,15 @@
           "options": [
             {
               "text": "Back to mission overview",
-              "triggerDialogue": "introduction"
+              "triggerScene": "introduction"
             },
             {
               "text": "Explain engagement rolls",
-              "triggerDialogue": "engagement_detail"
+              "triggerScene": "engagement_detail"
             },
             {
               "text": "Explain mission payoff and heat",
-              "triggerDialogue": "payoff_detail"
+              "triggerScene": "payoff_detail"
             }
           ]
         },
@@ -465,15 +465,15 @@
           "options": [
             {
               "text": "Back to mission overview",
-              "triggerDialogue": "introduction"
+              "triggerScene": "introduction"
             },
             {
               "text": "Explain engagement rolls",
-              "triggerDialogue": "engagement_detail"
+              "triggerScene": "engagement_detail"
             },
             {
               "text": "Explain challenge resolution",
-              "triggerDialogue": "challenge_detail"
+              "triggerScene": "challenge_detail"
             }
           ]
         }

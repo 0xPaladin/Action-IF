@@ -1,3 +1,21 @@
+/**
+ * ### Hook System
+ *
+ * `hook.js` provides a declarative mechanism for state changes in game definitions.
+ * Game creators use hook objects like `{ type: "setFlag", flag: "done" }` for all effects.
+ *
+ * Built-in Hook Types:
+ * - `setFlag` — Sets `state.flags[flag] = true`
+ * - `clearFlag` — Deletes `state.flags[flag]`
+ * - `tickClock` — Ticks a faction clock
+ * - `addRep`, `addCoin`, `addXp`, `spendCoin` — Crew resource changes
+ * - `healHarm`, `rest`, `engagement`, `completeMission` — Mission/character effects
+ * - `giveItem`, `takeItem`, `addCondition`, `removeCondition` — Inventory/conditions
+ * - `addMomentum`, `spendMomentum` — Momentum pool changes
+ * - `level_up_action`, `level_up_stunt` — Character advancement
+ *
+ * Custom hook types can be registered with `registerHook(type, handler)`.
+ */
 import { tickFactionClock } from "./factionClock.js";
 import { addCoin, addRep, addCrewXp } from "./crew.js";
 import {

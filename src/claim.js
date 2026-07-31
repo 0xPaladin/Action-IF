@@ -1,3 +1,30 @@
+/**
+ * ### Claims
+ *
+ * `claim.js` models territorial holdings that the crew can acquire. Claims use **formula templates** —
+ * the effect of taking a claim is determined by its template, while the name, description, location,
+ * params, and connections are unique per claim.
+ *
+ * Built-in Templates:
+ * - `income` — +coin to crew on take (params: `amount`)
+ * - `rep_boost` — +rep to crew on take (params: `amount`)
+ * - `heat_sink` — +heatSinks (reduces mission heat) (params: `amount`)
+ * - `upgrade_slot` — Grants a crew upgrade (params: `upgradeId`)
+ * - `faction_contact` — -heat with a faction (params: `factionId`, `amount`)
+ * - `territory_control` — Adds a location to crew territory (params: `locationId`)
+ * - `crew_stunt` — Activates a crew stunt (params: `stuntId`)
+ * - `lair_room` — Adds a lair room (params: `roomId`)
+ * - `bonus_payout` — Extra coin/rep from missions with matching tags (params: `tags[]`, `bonusCoin`, `bonusRep`)
+ *
+ * API:
+ * - `registerClaimTemplate(id, name, description, apply, remove)` — register a custom template
+ * - `getClaimTemplate(id)` / `knownClaimTemplates()` — lookup
+ * - `createClaim(id, name, description, location, templateId, params, options)` — create a claim
+ * - `findClaim(state, id)` — lookup a claim
+ * - `getAvailableClaims(state)` — returns claims whose prerequisites are met
+ * - `takeClaim(state, claimId)` — marks a claim taken, runs its template's `apply`
+ * - `relinquishClaim(state, claimId)` — runs `remove`, marks untaken
+ */
 import { addCoin, addRep, addUpgrade, addCrewStunt, hasUpgrade, hasCrewStunt } from "./crew.js";
 import { addHeat as addFactionHeat } from "./faction.js";
 

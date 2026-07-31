@@ -1,3 +1,23 @@
+/**
+ * ### Engine
+ *
+ * `engine.js` is the orchestrator — the single entry point for the game loop.
+ *
+ * API:
+ * - `createGame(definition)` — initializes state from a declarative definition object
+ * - `getContext(state)` — returns what the player currently sees
+ * - `processInput(state, command, characterIndex)` — dispatches parsed commands
+ *
+ * The engine handles:
+ * - Location navigation and action selection
+ * - Action scenes: resolving challenges with stunts/items/harm/bonus dice
+ * - Dialogue scenes: selecting options with condition checks
+ * - Info commands: help, status, inventory, crew, factions, save/load, levelup
+ * - Scene hooks: onEnter/onExit, engagement, rest, healHarm, completeMission
+ * - Guard reset after each scene
+ * - Heat tracking and danger clock
+ * - Level-up encounters
+ */
 import {
   createGameState,
   setCurrentLocation,
@@ -26,8 +46,8 @@ import {
   getVisibleLinks,
   getAvailableActions,
   useLink,
-  useAction,
   setLocation,
+  executeAction,
 } from "./location.js";
 import {
   createZone,
@@ -542,6 +562,12 @@ export function getContext(state) {
       id: npc.id,
       name: npc.name,
       description: npc.description,
+      actions: getAvailableNPCActions(npc, state).map((a, j) => ({
+        index: j,
+        id: a.id,
+        label: a.label,
+        description: a.description,
+      })),
     })),
     mayChangeInventory: location.mayChangeInventory || false,
     onMission: !!activeMission,
@@ -1091,34 +1117,36 @@ function handleActNumber(state, index) {
   if (!location) return { type: "error", message: "You are nowhere." };
 
   const actions = getAvailableActions(location, state);
-  if (index < 0 || index >= actions.length) {
+  const npcs = getNPCsAtLocation(state, location.id);
+  const npcActions = npcs.flatMap((npc) => getAvailableNPCActions(npc, state));
+  const allActions = [...actions, ...npcActions];
+  if (index < 0 || index >= allActions.length) {
     return {
       type: "error",
-      message: `Invalid option. Choose 1-${actions.length}.`,
+      message: `Invalid option. Choose 1-${allActions.length}.`,
     };
   }
 
-  const actionIndex = location.actions.indexOf(actions[index]);
-  const result = useAction(location, actionIndex, state);
+  const result = executeAction(state, allActions[index]);
 
   if (result.triggerScene) {
     setActiveScene(state, result.triggerScene);
-      const scene = findSceneById(state, result.triggerScene);
-      return {
-        type: "scene_start",
-        sceneId: result.triggerScene,
-        sceneFiction: scene?.fiction,
-        context: getContext(state),
-      };
-    }
-
+    const scene = findSceneById(state, result.triggerScene);
     return {
-      type: "action_done",
-      actionId: result.action.id,
-      actionLabel: result.action.label,
+      type: "scene_start",
+      sceneId: result.triggerScene,
+      sceneFiction: scene?.fiction,
       context: getContext(state),
     };
+  }
+
+  return {
+    type: "action_done",
+    actionId: result.action.id,
+    actionLabel: result.action.label,
+    context: getContext(state),
   };
+}
 
 function handleTalk(state, index) {
   const location = getCurrentLocation(state);
@@ -1155,14 +1183,16 @@ function handleLocationAction(state, command, characterIndex) {
   if (!location) return { type: "error", message: "You are nowhere." };
 
   const available = getAvailableActions(location, state);
-  const match = findActionByText(available, command.text);
+  const npcs = getNPCsAtLocation(state, location.id);
+  const npcActions = npcs.flatMap((npc) => getAvailableNPCActions(npc, state));
+  const allActions = [...available, ...npcActions];
+  const match = findActionByText(allActions, command.text);
 
   if (!match) {
     return { type: "error", message: `You can't do that here.` };
   }
 
-  const actionIndex = location.actions.indexOf(match);
-  const result = useAction(location, actionIndex, state);
+  const result = executeAction(state, match);
 
   if (result.triggerScene) {
     setActiveScene(state, result.triggerScene);
@@ -1222,8 +1252,7 @@ function handleLocationSelect(state, index) {
 
   index -= links.length;
   if (index < actions.length) {
-    const actionIndex = location.actions.indexOf(actions[index]);
-    const result = useAction(location, actionIndex, state);
+    const result = executeAction(state, actions[index]);
 
     if (result.triggerScene) {
       setActiveScene(state, result.triggerScene);
@@ -1742,6 +1771,14 @@ function findActionByText(actions, text) {
       a.label.toLowerCase().includes(lower) ||
       lower.includes(a.label.toLowerCase()),
   );
+}
+
+function getAvailableNPCActions(npc, state) {
+  return (npc.actions || []).filter((a) => {
+    if (!checkCondition(a.condition, state)) return false;
+    if (a.once && a.used) return false;
+    return true;
+  });
 }
 
 function checkCondition(condition, state) {

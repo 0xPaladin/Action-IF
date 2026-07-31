@@ -1,3 +1,49 @@
+/**
+ * ### Scene Types
+ *
+ * Scenes are triggered by location or NPC actions. They have a `type` — either `"action"` or `"dialogue"`.
+ *
+ * Action Scene:
+ * - Has **challenges** — obstacles resolved via action rolls
+ * - Scene { id, type: "action", fiction, tags, challenges, resolved, onEnter, onExit, heat }
+ *
+ * Dialogue Scene:
+ * - Has **options** — choices that set flags, trigger other scenes, or both
+ * - Scene { id, type: "dialogue", fiction, tags, options, resolved, onEnter, onExit }
+ *
+ * Option {
+ *   text: string
+ *   setFlag: string | null
+ *   triggerScene: string | null
+ *   condition: object | null
+ *   hooks: object | null
+ *   tickFactionClock: { id, amount } | null
+ * }
+ *
+ * Challenge {
+ *   id: string
+ *   description: string
+ *   clock: { max: number, current: number }
+ *   tags: string[]
+ *   actions: ActionEntry[]
+ *   resolved: boolean
+ *   onAct: Hook | null
+ *   onComplete: Hook | null
+ *   tickFactionClock: { id, amount } | null
+ * }
+ *
+ * ActionEntry {
+ *   actionName: string
+ *   heat: number
+ *   consequences: Consequence
+ * }
+ *
+ * Consequence {
+ *   description: string
+ *   template: string
+ *   params?: object
+ * }
+ */
 import { updatePlotlines } from "./plotline.js";
 import { setActiveScene, addLogEntry } from "./state.js";
 import { filterConditional } from "./condition.js";
@@ -26,8 +72,8 @@ export function createScene(id, type, fiction, tags = [], triggerScene = null, o
   return scene;
 }
 
-export function createOption(text, setFlag = null, triggerScene = null, condition = null) {
-  return { text, setFlag, triggerScene, condition };
+export function createOption(text, setFlag = null, triggerScene = null, condition = null, hooks = null, tickFactionClock = null) {
+  return { text, setFlag, triggerScene, condition, hooks, tickFactionClock };
 }
 
 export function addChallengeToScene(scene, challenge) {

@@ -195,6 +195,173 @@ describe("processInput", () => {
     expect(state.flags.searched).toBe(true);
   });
 
+  test("processes NPC action via text command", () => {
+    const state = createGame({
+      characters: [],
+      locations: [
+        { id: "room1", name: "Room", description: "desc", links: [], actions: [] },
+      ],
+      npcs: [
+        {
+          id: "valeria",
+          name: "Valeria",
+          location: "room1",
+          description: "A contact.",
+          actions: [
+            { id: "briefing", label: "Request Briefing", description: "Ask for details.", once: false, triggerScene: null, setFlag: "briefing_received", provideKeys: ["gate_key"], condition: null, hooks: null },
+          ],
+          dialogue: [],
+        },
+      ],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+
+    const result = processInput(state, parseInput("briefing"));
+    expect(result.type).toBe("action_done");
+    expect(state.flags.briefing_received).toBe(true);
+    expect(state.flags.gate_key).toBe(true);
+  });
+
+  test("processes NPC action via act number", () => {
+    const state = createGame({
+      characters: [],
+      locations: [
+        { id: "room1", name: "Room", description: "desc", links: [], actions: [] },
+      ],
+      npcs: [
+        {
+          id: "valeria",
+          name: "Valeria",
+          location: "room1",
+          description: "A contact.",
+          actions: [
+            { id: "briefing", label: "Request Briefing", description: "Ask for details.", once: false, triggerScene: null, setFlag: "briefing_received", provideKeys: [], condition: null, hooks: null },
+          ],
+          dialogue: [],
+        },
+      ],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+
+    const result = processInput(state, parseInput("act 1"));
+    expect(result.type).toBe("action_done");
+    expect(state.flags.briefing_received).toBe(true);
+  });
+
+  test("NPC action with triggerScene starts scene", () => {
+    const state = createGame({
+      characters: [],
+      locations: [
+        { id: "room1", name: "Room", description: "desc", links: [], actions: [] },
+      ],
+      npcs: [
+        {
+          id: "valeria",
+          name: "Valeria",
+          location: "room1",
+          description: "A contact.",
+          actions: [
+            { id: "start", label: "Start Mission", description: "Begin.", once: true, triggerScene: "mission_start", setFlag: "mission_started", provideKeys: [], condition: null, hooks: null },
+          ],
+          dialogue: [],
+        },
+      ],
+      plotlines: [{
+        id: "p1",
+        name: "Mission",
+        description: "d",
+        scenes: [{ id: "mission_start", type: "dialogue", fiction: "Go!", tags: [], options: [{ text: "OK" }] }],
+      }],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+
+    const result = processInput(state, parseInput("start"));
+    expect(result.type).toBe("scene_start");
+    expect(result.sceneId).toBe("mission_start");
+    expect(state.flags.mission_started).toBe(true);
+  });
+
+  test("NPC action appears in location context under its NPC", () => {
+    const state = createGame({
+      characters: [],
+      locations: [
+        { id: "room1", name: "Room", description: "desc", links: [], actions: [] },
+      ],
+      npcs: [
+        {
+          id: "valeria",
+          name: "Valeria",
+          location: "room1",
+          description: "A contact.",
+          actions: [
+            { id: "briefing", label: "Request Briefing", description: "Ask for details.", once: false, triggerScene: null, setFlag: null, provideKeys: [], condition: null, hooks: null },
+          ],
+          dialogue: [],
+        },
+      ],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+
+    const ctx = getContext(state);
+    expect(ctx.npcs).toHaveLength(1);
+    expect(ctx.npcs[0].name).toBe("Valeria");
+    expect(ctx.npcs[0].actions).toHaveLength(1);
+    expect(ctx.npcs[0].actions[0].label).toBe("Request Briefing");
+  });
+
+  test("NPC action once-flag prevents reuse", () => {
+    const state = createGame({
+      characters: [],
+      locations: [
+        { id: "room1", name: "Room", description: "desc", links: [], actions: [] },
+      ],
+      npcs: [
+        {
+          id: "valeria",
+          name: "Valeria",
+          location: "room1",
+          description: "A contact.",
+          actions: [
+            { id: "once_action", label: "Once", description: "Do once.", once: true, triggerScene: null, setFlag: "once_done", provideKeys: [], condition: null, hooks: null },
+          ],
+          dialogue: [],
+        },
+      ],
+      plotlines: [],
+      factions: [],
+      factionClocks: [],
+      claims: [],
+      crew: null,
+      startLocation: "room1",
+    });
+
+    const result1 = processInput(state, parseInput("once"));
+    expect(result1.type).toBe("action_done");
+    expect(state.flags.once_done).toBe(true);
+
+    const result2 = processInput(state, parseInput("once"));
+    expect(result2.type).toBe("error");
+  });
+
   test("processes dialogue option selection", () => {
     const state = createGame({
       characters: [],

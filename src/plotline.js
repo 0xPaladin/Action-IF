@@ -1,3 +1,49 @@
+/**
+ * ### Plotlines
+ *
+ * A **Plotline** is a connected set of scenes that form a story arc. Players may jump between
+ * scenes on different plotlines based on choices — plotlines do not need to run start-to-finish.
+ *
+ * A plotline can optionally carry a **mission config** — when present, the plotline is treated
+ * as a mission (score) with an engagement roll, heat tracking, and payoff upon completion.
+ *
+ * Plotline {
+ *   id: string
+ *   name: string
+ *   description: string
+ *   scenes: Scene[]
+ *   completed: boolean
+ *   mission: MissionConfig | null
+ * }
+ *
+ * MissionConfig {
+ *   locationId: string
+ *   startingSceneId: string
+ *   patron: string | null
+ *   patronFaction: string | null
+ *   targetFaction: string | null
+ *   payoff: { rep: number, coin: number }
+ *   baseHeat: number
+ *   heatGenerated: number
+ *   dangerClock: { current: number, max: number }
+ *   tags: string[]
+ *   engagementAction: string
+ *   onComplete: Hook | null
+ * }
+ *
+ * API:
+ * - `createPlotline(id, name, description, scenes, mission)` — create a new plotline
+ * - `addSceneToPlotline(plotline, scene)` — associate a scene
+ * - `plotlineStatus(plotline)` — returns { total, resolved, remaining, completed }
+ * - `isPlotlineComplete(plotline)` — checks all scenes resolved
+ * - `isMissionComplete(plotline)` — checks all plotline scenes resolved
+ * - `startPlotlineMission(state, plotline)` — activates a plotline as the current mission
+ * - `getActiveMission(state)` — returns the active plotline/mission or null
+ * - `addMissionHeat(state, amount)` — updates heatGenerated
+ * - `finishMission(state, plotline)` — applies payoff, faction heat, enters downtime
+ * - `updateMission(state)` — checks if active mission is complete
+ * - `updatePlotlines(state)` — scans all plotlines, marks completed, finishes missions
+ */
 import { setCurrentLocation, setActiveScene, addLogEntry } from "./state.js";
 import { addCoin, addRep } from "./crew.js";
 import { addHeat as addFactionHeat } from "./faction.js";

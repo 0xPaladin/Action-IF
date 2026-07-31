@@ -1,3 +1,24 @@
+/**
+ * ### Actions
+ *
+ * Actions are physical things characters can do at a location (search, activate a lever, etc)
+ * or interact with an NPC. They may trigger a scene, provide keys, set flags, or resolve hooks.
+ * The same `Action` object is used for both location actions and NPC actions — NPC actions appear
+ * grouped under their NPC in the location context.
+ *
+ * Action {
+ *   id: string
+ *   label: string                  // display text
+ *   description: string
+ *   once: boolean                  // true = can only be performed once
+ *   used: boolean                  // tracks if a once-action has been used
+ *   triggerScene: string | null    // scene to enter when used
+ *   setFlag: string | null         // flag to set when used
+ *   provideKeys: string[]          // keys (flags) granted when used
+ *   condition: object | null       // prerequisite to be available
+ *   hooks: object | null           // declarative hook(s) to resolve when used
+ * }
+ */
 import { rollDice, interpretResults } from "./dice.js";
 import { harmPenalty, conditionPenalty } from "./character.js";
 

@@ -97,9 +97,9 @@ A game definition is a single object whose top-level keys are the building block
 
 **Links** *(within locations)* — connect one location to another. They may be conditionally invisible, locked behind a `key` flag, or carry a `journey` of intervening scenes played during transit. Journeys can roll for random **encounters**.
 
-**Actions** *(within locations)* — physical verbs (search, pull lever) that set flags, grant keys, trigger scenes, resolve hooks, or some combination. Conditions gate their availability.
+**Actions** *(within locations and NPCs)* — physical verbs (search, pull lever, request briefing) that set flags, grant keys, trigger scenes, resolve hooks, or some combination. Conditions gate their availability. The same `Action` object is used for both location and NPC actions; NPC actions appear grouped under their NPC.
 
-**NPCs** — `npcs[]`. Characters who live at a location, may belong to a faction, offer `actions`, and carry `dialogue` trees that the engine compiles into dialogue scenes with branching `triggerDialogue` chains.
+**NPCs** — `npcs[]`. Characters who live at a location, may belong to a faction, offer `actions` (same object as location actions), and carry `dialogue` trees that the engine compiles into dialogue scenes with branching `triggerScene` chains.
 
 **Plotlines** — `plotlines[]`. Connected sets of scenes forming a story arc. Each scene is nested inside its plotline. A plotline may optionally carry a **`mission`** config to turn it into a Charge-style score.
 

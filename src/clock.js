@@ -1,3 +1,13 @@
+/**
+ * ### Clock
+ *
+ * `clock.js` implements generic progress clocks:
+ * - `createClock(max, label, current)` → creates a clock object
+ * - `tickClock(clock, segments)` → advances the clock
+ * - `isClockFull(clock)` → checks if clock is complete
+ * - `clockRemaining(clock)` → returns remaining segments
+ * - `clockProgress(clock)` → returns progress ratio (0-1)
+ */
 export function createClock(max, label = "", current = 0) {
   return { max, current, label };
 }

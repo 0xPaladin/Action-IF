@@ -1,3 +1,45 @@
+/**
+ * ### Zones and Locations
+ *
+ * The game world is a node map of **Zones** with **Locations** as leaf nodes.
+ * Characters exist in locations. Zones form the spatial hierarchy; locations are the actual navigable spaces.
+ *
+ * Zone Types (largest → smallest):
+ * galaxy > expanse > sector > reach > subsector > cluster > system > world > realm > region > area > site
+ *
+ * Location {
+ *   id: string
+ *   name: string
+ *   description: string
+ *   parent: string | null            // always a site zone ID
+ *   links: Link[]                     // manual navigation links only
+ *   actions: Action[]
+ *   onEnter: Hook | null           // fires when entering
+ *   onExit: Hook | null            // fires when exiting
+ * }
+ *
+ * Link {
+ *   targetId: string               // target location ID
+ *   label: string                  // display text
+ *   condition: object | null       // prerequisite to be visible
+ *   locked: boolean                // requires a key when true
+ *   key: string | null             // flag required to unlock
+ *   journey: SceneDef[] | null     // optional scenes played during travel
+ * }
+ *
+ * Action {
+ *   id: string
+ *   label: string
+ *   description: string
+ *   once: boolean
+ *   used: boolean
+ *   triggerScene: string | null
+ *   setFlag: string | null
+ *   provideKeys: string[]
+ *   condition: object | null
+ *   hooks: object | null
+ * }
+ */
 import { filterConditional } from "./condition.js";
 import { resolveHook } from "./hook.js";
 import { getNPCsAtLocation } from "./state.js";
@@ -72,12 +114,7 @@ export function useLink(location, linkIndex, state) {
   return { targetId: link.targetId, journey: link.journey || null };
 }
 
-export function useAction(location, actionIndex, state) {
-  const action = location.actions[actionIndex];
-  if (!action) {
-    throw new Error(`Action index ${actionIndex} not found in location "${location.id}"`);
-  }
-
+export function executeAction(state, action) {
   if (!checkCondition(action.condition, state)) {
     throw new Error(`Action "${action.label}" is not available`);
   }
@@ -106,6 +143,15 @@ export function useAction(location, actionIndex, state) {
     triggerScene: action.triggerScene || null,
     action,
   };
+}
+
+export function useAction(location, actionIndex, state) {
+  const action = location.actions[actionIndex];
+  if (!action) {
+    throw new Error(`Action index ${actionIndex} not found in location "${location.id}"`);
+  }
+
+  return executeAction(state, action);
 }
 
 export function setLocation(state, locationId) {

@@ -219,6 +219,11 @@ export function contextToText(ctx) {
       t += "\n\nTalk to:";
       ctx.npcs.forEach((npc) => {
         t += `\n  ${ctx.links.length + ctx.actions.length + npc.index + 1}. ${npc.name}`;
+        if (npc.actions?.length) {
+          npc.actions.forEach((a) => {
+            t += `\n    - ${a.label}`;
+          });
+        }
       });
     }
     return t;

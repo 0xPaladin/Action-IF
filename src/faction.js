@@ -1,3 +1,34 @@
+/**
+ * ### Factions
+ *
+ * `faction.js` models the factions in the game world. Each faction has a name, description,
+ * tier (1–6), hold, heat (positive = anger, negative = favor), territory, members, goals, notes,
+ * and an optional faction clock reference.
+ *
+ * Faction {
+ *   id: string
+ *   name: string
+ *   description: string
+ *   tier: number           // 1–6 power level
+ *   hold: "strong" | "weak" | "none"
+ *   heat: number           // positive = anger (Heat), negative = favor (Favor)
+ *   territory: string[]    // location IDs
+ *   members: string[]      // NPC identifiers
+ *   notes: string
+ *   goals: string[]
+ *   clockId: string | null // optional faction clock ID
+ * }
+ *
+ * API:
+ * - `createFaction(id, name, description, options)` — create a faction
+ * - `addHeat(faction, amount)` — add positive (heat) or negative (favor) heat
+ * - `setTier(faction, tier)` — set tier (1–6)
+ * - `setHold(faction, hold)` — set hold ("strong", "weak", "none")
+ * - `addTerritory/removeTerritory/hasTerritory(locationId)` — manage controlled locations
+ * - `addMember/removeMember/hasMember(memberId)` — manage NPC members
+ * - `addGoal/removeGoal(goal)` — manage goals
+ * - `setNotes(notes)` — set notes
+ */
 export function createFaction(id, name, description, options = {}) {
   return {
     id,

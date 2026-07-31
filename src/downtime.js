@@ -1,3 +1,26 @@
+/**
+ * ### Downtime
+ *
+ * `downtime.js` manages the between-scores phase where characters recuperate and advance.
+ * Each downtime phase grants 2 activities per character.
+ *
+ * Downtime is automatically entered after a mission completes.
+ *
+ * API:
+ * - `startDowntime(state)` — sets every character's `downtimeRemaining` to 2
+ * - `canDoActivity(state, charIndex)` / `activitiesRemaining(state, charIndex)` — check remaining activities
+ * - `doRecovery(state, characterIndex)` — heals + clears conditions (uses 1 activity)
+ * - `doTraining(state, characterIndex)` — gains 1 XP (uses 1 activity)
+ * - `doLevelUp(state, characterIndex, choice)` — levels up a character (8 XP required)
+ * - `createProject(id, description, clockMax, onComplete)` — creates a long-term project
+ * - `doProject(state, characterIndex, projectId)` — advances a project clock
+ *
+ * Project Presets:
+ * - `fortifyDefensesProject()` — 4-tick clock, +1 maxGuard (capped at 5)
+ * - `trainActionProject()` — 6-tick clock, +1 XP
+ * - `cultivateContactProject(factionId)` — 4-tick clock, -1 heat with faction
+ * - `craftItemProject(itemId)` — 6-tick clock, adds item to inventory
+ */
 import { tickHealing, restCharacter, addItem, addStunt } from "./character.js";
 import { createStunt } from "./stunt.js";
 import { addLogEntry } from "./state.js";

@@ -362,6 +362,14 @@ body {
   margin-bottom: 8px;
 }
 
+.npc-actions {
+  margin-left: 16px;
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .btn {
   display: inline-block;
   padding: 4px 10px;

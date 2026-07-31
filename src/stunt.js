@@ -1,3 +1,33 @@
+/**
+ * ### Stunts
+ *
+ * `stunt.js` models character abilities that trigger when a tag matches the active scene or challenge.
+ *
+ * Stunt {
+ *   id: string
+ *   name: string
+ *   description: string
+ *   tags: string[]                    // matched against scene + challenge tags
+ *   action: string | null             // if set, bonusDice/bonusTicks only apply when this action is rolled
+ *   bonusDice: number                 // +1d per point
+ *   bonusTicks: number                // +1 extra tick per point
+ *   substituteAction: { from, to } | null  // use action `to` for rolls of action `from`
+ * }
+ *
+ * Stunt Types:
+ * - **+1d**: `bonusDice: 1` — add a bonus die to the pool
+ * - **+ticks**: `bonusTicks: 1` — +1 tick on the challenge clock
+ * - **+effect**: `bonusEffect: 1` — increase effect level by one
+ * - **Substitute action**: `substituteAction: { from: "Command", to: "Sway" }`
+ *
+ * API:
+ * - `createStunt(id, name, description, tags, opts)` — create a stunt
+ * - `findApplicableEffects(effectors, tags, character)` — find stunts/items with matching tags
+ * - `getEffectiveActionFromEffects(character, actionName, applicable)` — check for action substitution
+ * - `applyBonusDice(applicable, pool, actionName)` — sum bonus dice
+ * - `getBonusTicks(applicable, actionName)` — sum bonus ticks
+ * - `getBonusEffect(applicable, actionName)` — sum bonus effect
+ */
 export function createStunt(id, name, description, tags = [], opts = {}) {
   return {
     id,

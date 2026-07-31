@@ -1,3 +1,32 @@
+/**
+ * ### Zones
+ *
+ * `zone.js` models the zone hierarchy, graph generation.
+ *
+ * Zone Types (largest → smallest):
+ * galaxy > expanse > sector > reach > subsector > cluster > system > world > realm > region > area > site
+ *
+ * Zone {
+ *   id: string
+ *   type: string                     // one of the hierarchy levels above
+ *   name: string
+ *   description: string
+ *   parent: string | null
+ *   children: string[]               // child zone IDs (populated by generateZoneNodeGraph)
+ *   links: Link[]                     // structural navigation links
+ * }
+ *
+ * API:
+ * - `createZone(id, type, name, description, parent)` — create a zone
+ * - `addZone(state, zone)` — add zone to state
+ * - `generateZoneNodeGraph(state)` — builds parent/child links from zone hierarchy
+ *
+ * Zone Node Graph Logic (4 passes):
+ * 1. Build a `zoneIndex` map of all zones
+ * 2. For each zone with a `parent`, push its id into the parent's `children[]`
+ * 3. For each zone, create parent→child links from `children[]`
+ * 4. For each non-root zone, create a child→parent return link
+ */
 import { createLink } from "./location.js";
 
 export function createZone(id, type, name, description, parent = null) {

@@ -1,3 +1,45 @@
+/**
+ * ### Characters
+ *
+ * A character has 12 **actions** rated 0–4 (max 2 at creation). At character creation, 7 action dots are distributed across the list.
+ *
+ * Character {
+ *   name: string
+ *   actions: { [actionName]: number }   // all 12 actions, each 0–4
+ *   guard: number                        // 0–maxGuard, absorbs harm first, resets each scene
+ *   maxGuard: number                     // max guard capacity (default 3, increased via fortify project)
+ *   body: number                         // 0–6, persistent; ≤0 = incapacitated
+ *   conditions: string[]               // codified condition IDs, each consumes 1 load slot and incurs −1d per matching tag
+ *   items: string[]                      // specialized item IDs this character can equip
+ *   inventory: Item[]                    // carried items
+ *   stunts: string[]                       // stunt IDs from the top-level `stunts` array
+ *   stuntChoices: StuntDef[]             // available stunts for level-up (game-defined)
+ *   healing: { ticks: number } | null    // 4-tick healing clock
+ *   load: number                         // current total load from inventory
+ *   maxLoad: number                      // max load capacity (set via setLoadLevel)
+ *   xp: number                           // experience points earned
+ *   projects: Project[]                  // long-term projects
+ *   downtimeRemaining: number            // 2 per downtime phase
+ *   aspects: string[]                     // optional Fate-style aspects
+ * }
+ *
+ * The 12 actions and their descriptors:
+ *
+ * | Action | Description |
+ * |--------|-------------|
+ * | Muscle | use your force to move, overcome or wreck the obstacle in front of you. |
+ * | Move | quickly shift to a new position or get out of danger. |
+ * | Finesse | employ dexterous manipulation or subtle misdirection. |
+ * | Sneak | traverse skillfully and quietly. |
+ * | Shoot | carefully track and shoot at a target. |
+ * | Tinker | understand, create, or repair complex mechanisms or organisms. |
+ * | Study | gather, scrutinize and analyze information. |
+ * | Notice | observe the situation and anticipate outcomes. |
+ * | Bond | reassure and socialize with friends and contacts. |
+ * | Command | compel swift obedience with skills and respect. |
+ * | Focus | concentrate to accomplish a task that requires great strength of mind. |
+ * | Sway | influence with guile, charm, or argument. |
+ */
 import { getCondition } from "./condition.js";
 
 export const ACTION_ACTIONS = [

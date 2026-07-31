@@ -1,3 +1,26 @@
+/**
+ * ### Consequence System
+ *
+ * Consequences are registered templates that mutate game state. Each action entry provides a single
+ * consequence object. Consequences apply on **failure** (always) and **partial success** (50% of the time —
+ * the other 50% triggers Reduced Effect instead).
+ *
+ * Built-in Templates:
+ * - `harm` — Reduces Guard then Body (params: `amount`, reduced by matching `armor` items)
+ * - `condition` — Adds a condition ID to `character.conditions[]` (params: `condition`)
+ * - `tickClock` — Advances the mission's 4-seg danger clock (params: `amount`)
+ * - `loseItem` — Removes an item from inventory (params: `itemId`, optional)
+ *
+ * String-only consequences (narrative text) are also supported.
+ *
+ * Custom templates can be registered with `registerConsequenceTemplate(id, handler)`.
+ *
+ * API:
+ * - `registerConsequenceTemplate(id, handler)` — register a custom template
+ * - `knownConsequenceTemplates()` — return array of registered template IDs
+ * - `getConsequenceTemplate(id)` — lookup a template handler
+ * - `applyConsequence(state, consequence, context)` — run the template handler
+ */
 import { removeItem, recalcLoad } from "./character.js";
 import { findApplicableEffects } from "./stunt.js";
 import { tickClock as tickC } from "./clock.js";

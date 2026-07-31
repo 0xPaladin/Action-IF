@@ -1,3 +1,33 @@
+/**
+ * ### Challenge
+ *
+ * Each **Challenge** is an obstacle the crew must overcome:
+ *
+ * Challenge {
+ *   id: string
+ *   description: string            // short obstacle description
+ *   clock: { max: number, current: number }
+ *   tags: string[]                 // e.g. ["locked", "arcane", "guarded"]
+ *   actions: ActionEntry[]
+ *   resolved: boolean
+ *   onAct: Hook | null    // fires after each action roll
+ *   onComplete: Hook | null       // fires when clock fills
+ * }
+ *
+ * Each **ActionEntry** is a possible approach a PC can take, with explicit consequences per outcome:
+ *
+ * ActionEntry {
+ *   actionName: string      // one of the 12 actions
+ *   heat: number            // default 3, used for mission heat tracking
+ *   consequences: Consequence  // applied on failure only
+ * }
+ *
+ * Consequence {
+ *   description: string     // narrative text displayed to player
+ *   template: string        // registered template: "harm", "condition", "tickClock", "loseItem"
+ *   params?: object         // template-specific parameters
+ * }
+ */
 import { tickClock, isClockFull } from "./clock.js";
 import { actionRoll } from "./action.js";
 import {

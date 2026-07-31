@@ -1,3 +1,25 @@
+/**
+ * ### Command Parser
+ *
+ * `parser.js` converts player text into structured commands for `processInput`.
+ *
+ * Command mappings:
+ * - `"north"`, `"n"`, `"go south"` → `{ type: "go", target: "north" }`
+ * - `"1"`, `"option 3"` → `{ type: "select", index: 0 }`
+ * - `"search"`, `"use key"` → `{ type: "action", text: "..." }`
+ * - `"help"`, `"?"` → `{ type: "help" }`
+ * - `"go 3"` → `{ type: "go_num", index: 2 }`
+ * - `"act 3"` → `{ type: "act_num", index: 2 }`
+ * - `"save"`, `"load mygame"` → save/load commands
+ * - `"levelup"` → opens level-up scene (requires 8 XP)
+ * - `"push Sway"` → spend 2 momentum for +1d
+ * - `"talk 1"` → `{ type: "talk", index: 0 }`
+ *
+ * GM Commands (hidden from help):
+ * - `"gm downtime true"` → starts downtime
+ * - `"gm downtime false"` → ends downtime
+ * - `"gm addHeat guardians 5"` → adds heat to faction
+ */
 export function parseInput(text) {
   const trimmed = text.trim().toLowerCase();
   if (!trimmed) return null;

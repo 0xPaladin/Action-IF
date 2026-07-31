@@ -14,7 +14,7 @@ The top-level definition object accepts a `name` field (string) that sets the ga
   - [Location](#location)
   - [Link](#link)
   - [Encounter](#encounter)
-  - [Location Action](#location-action)
+  - [Action](#action)
   - [Character](#character)
     - [Character Creation Helpers](#character-creation-helpers)
   - [Item](#item)
@@ -27,9 +27,7 @@ The top-level definition object accepts a `name` field (string) that sets the ga
     - [Built-in Templates](#built-in-templates)
     - [Template Parameter Reference](#template-parameter-reference)
   - [NPC](#npc)
-  - [NPCAction](#npcaction)
-  - [NPCDialogue](#npcdialogue)
-  - [DialogueOption](#dialogueoption)
+  - [Option](#option)
   - [Plotline](#plotline)
   - [MissionConfig](#missionconfig)
   - [Faction](#faction)
@@ -311,9 +309,9 @@ Dialogue encounter:
 
 ---
 
-## Location Action
+## Action
 
-Actions are physical things characters can do at a location (search, activate a lever, etc.).
+Actions are physical things characters can do at a location (search, activate a lever, etc.) or interact with an NPC. They may trigger a scene, provide keys, set flags, or resolve hooks. The same `Action` object is used for both location actions and NPC actions — NPC actions simply appear grouped under their NPC in the UI.
 
 ```json
 {
@@ -330,6 +328,23 @@ Actions are physical things characters can do at a location (search, activate a 
 }
 ```
 
+NPC action example (appears under the NPC in the location context):
+
+```json
+{
+  "id": "offer_mission",
+  "label": "Request Mission Briefing",
+  "description": "Ask Commander Valeria for mission details.",
+  "once": true,
+  "used": false,
+  "triggerScene": "npc:valeria:introduction",
+  "setFlag": "briefing_received",
+  "provideKeys": ["gate_key"],
+  "condition": null,
+  "hooks": { "type": "log", "text": "Mission briefing received." }
+}
+```
+
 **Fields:**
 
 | Field | Type | Description |
@@ -343,7 +358,7 @@ Actions are physical things characters can do at a location (search, activate a 
 | `setFlag` | `string \| null` | Flag to set when used |
 | `provideKeys` | `string[]` | Keys (flags) granted when used |
 | `condition` | `object \| null` | Prerequisite (see [Condition](#condition)) |
-| `hooks` | `object \| null` | Declarative hook(s) to resolve (see [Hook](#hook)) |
+| `hooks` | `Hook \| Hook[] \| null` | Declarative hook(s) to resolve (see [Hook](#hook)) |
 
 ---
 
@@ -635,7 +650,7 @@ Action scenes have **challenges** — obstacles resolved via action rolls.
 
 ## Scene — Dialogue
 
-Dialogue scenes are always contained within NPCs. They are created automatically from NPC dialogue definitions at game creation time with IDs prefixed `npc:{npcId}:{dialogueId}`.
+Dialogue scenes present the player with a set of **options** (choices). They can be standalone scenes nested in plotlines or encounters, or they can be NPC dialogue trees compiled into scenes at game creation time with IDs prefixed `npc:{npcId}:{dialogueId}`.
 
 ```json
 {
@@ -660,6 +675,9 @@ Dialogue scenes are always contained within NPCs. They are created automatically
       "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
     }
   ],
+  "onEnter": null,
+  "onExit": null,
+  "triggerScene": null,
   "resolved": false
 }
 ```
@@ -673,10 +691,48 @@ Dialogue scenes are always contained within NPCs. They are created automatically
 | `fiction` | `string` | Narrative text displayed to player |
 | `tags` | `string[]` | e.g. `["outdoor", "night", "social"]` |
 | `heat` | `boolean` | Whether this scene generates mission heat (default `false`) |
-| `options` | `DialogueOption[]` | Player choices |
- | `onEnter` | `Hook \| Hook[] \| null` | Fires when set as active scene |
- | `onExit` | `Hook \| Hook[] \| null` | Fires when scene becomes resolved |
- | `resolved` | `boolean` | Runtime: `true` after an option is selected |
+| `options` | [Option](#option)[] | Player choices |
+| `onEnter` | `Hook \| Hook[] \| null` | Fires when set as active scene |
+| `onExit` | `Hook \| Hook[] \| null` | Fires when scene becomes resolved |
+| `triggerScene` | `string \| null` | Scene to transition to when this scene resolves (if no option provides its own) |
+| `resolved` | `boolean` | Runtime: `true` after an option is selected |
+
+### NPC Dialogue
+
+NPC dialogue trees are defined in the `dialogue` array of an NPC definition. At game creation, the engine compiles each entry into a dialogue scene with the id `npc:{npcId}:{dialogueId}`. Options may use `triggerScene` to chain to another dialogue — if the value matches a sibling dialogue id, it is automatically prefixed with `npc:{npcId}:`; otherwise it is treated as an absolute scene id.
+
+```json
+{
+  "id": "introduction",
+  "fiction": "Commander Valeria looks up from the tactical display as you approach. 'Good. You're here. The situation in Vorath's Reach has escalated.'",
+  "tags": ["guardian", "briefing"],
+  "options": [
+    {
+      "text": "Stealth approach — infiltrate undetected",
+      "setFlag": "stealth_approach",
+      "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
+    },
+    {
+      "text": "Direct assault — overwhelming force",
+      "setFlag": "assault_approach",
+      "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
+    }
+  ],
+  "onEnter": null,
+  "onExit": null
+}
+```
+
+**Fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique dialogue identifier (becomes `npc:{npcId}:{id}` at runtime) |
+| `fiction` | `string` | NPC dialogue text |
+| `tags` | `string[]` | For stunts/items matching |
+| `options` | [Option](#option)[] | Player choices |
+| `onEnter` | `Hook \| Hook[] \| null` | Fires when dialogue is entered |
+| `onExit` | `Hook \| Hook[] \| null` | Fires when dialogue is resolved |
 
 ---
 
@@ -850,89 +906,14 @@ NPCs model non-player characters that exist at locations and provide dialogue in
 | `faction` | `string \| null` | Optional faction ID |
 | `location` | `string` | Location ID where NPC resides |
 | `description` | `string` | Displayed when entering location |
-| `actions` | `NPCAction[]` | Available actions at this location |
-| `dialogue` | `NPCDialogue[]` | Dialogue trees |
- | `onEnter` | `Hook \| Hook[] \| null` | Fires when NPC is entered |
- | `onExit` | `Hook \| Hook[] \| null` | Fires when NPC is exited |
+| `actions` | [Action](#action)[] | Available actions at this location (same object as location actions) |
+| `dialogue` | [Scene — Dialogue](#scene--dialogue)[] | Dialogue trees (compiled into `npc:{npcId}:{dialogueId}` scenes at runtime) |
+| `onEnter` | `Hook \| Hook[] \| null` | Fires when NPC is entered |
+| `onExit` | `Hook \| Hook[] \| null` | Fires when NPC is exited |
 
 ---
 
-## NPCAction
-
-Actions available at an NPC's location.
-
-```json
-{
-  "id": "offer_mission",
-  "label": "Request Mission Briefing",
-  "description": "Ask Commander Valeria for mission details.",
-  "once": true,
-  "used": false,
-  "triggerDialogue": "introduction",
-  "setFlag": "briefing_received",
-  "provideKeys": ["gate_key"],
-  "condition": null,
-  "hooks": { "type": "log", "text": "Mission briefing received." }
-}
-```
-
-**Fields:**
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | `string` | Unique action identifier |
-| `label` | `string` | Display text |
-| `description` | `string` | Shown when selecting |
-| `once` | `boolean` | One-time use |
-| `used` | `boolean` | Runtime: tracked state |
-| `triggerDialogue` | `string \| null` | Dialogue ID to start |
-| `setFlag` | `string \| null` | Flag to set |
-| `provideKeys` | `string[]` | Keys to grant |
-| `condition` | `object \| null` | Prerequisite (see [Condition](#condition)) |
-| `hooks` | `Hook \| Hook[] \| null` | Declarative effects |
-
----
-
-## NPCDialogue
-
-Dialogue trees within NPCs.
-
-```json
-{
-  "id": "introduction",
-  "fiction": "Commander Valeria looks up from the tactical display as you approach. 'Good. You're here. The situation in Vorath's Reach has escalated.'",
-  "tags": ["guardian", "briefing"],
-  "options": [
-    {
-      "text": "Stealth approach — infiltrate undetected",
-      "setFlag": "stealth_approach",
-      "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
-    },
-    {
-      "text": "Direct assault — overwhelming force",
-      "setFlag": "assault_approach",
-      "hooks": { "type": "setFlag", "flag": "vorath_mission_ready" }
-    }
-  ],
-  "onEnter": null,
-  "onExit": null
-}
-```
-
-**Fields:**
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | `string` | Unique dialogue identifier |
-| `fiction` | `string` | NPC dialogue text |
-| `tags` | `string[]` | For stunts/items matching |
-| `options` | `DialogueOption[]` | Player choices |
- | `onEnter` | `Hook \| Hook[] \| null` | Fires when dialogue is entered |
- | `onExit` | `Hook \| Hook[] \| null` | Fires when dialogue is resolved |
-
----
-
-## DialogueOption
+## Option
 
 Player choices in dialogue scenes.
 
@@ -940,12 +921,13 @@ Player choices in dialogue scenes.
 {
   "text": "Bribe the officer",
   "setFlag": "bribe_offered",
-  "triggerDialogue": "bribe_accepted",
+  "triggerScene": "npc:valeria:bribe_accepted",
   "condition": { "notFlag": "bribe_attempted" },
   "hooks": [
     { "type": "spendCoin", "amount": 2 },
     { "type": "tickFactionClock", "id": "bluecoat_investigation", "amount": 2 }
-  ]
+  ],
+  "tickFactionClock": null
 }
 ```
 
@@ -955,9 +937,10 @@ Player choices in dialogue scenes.
 |---|---|---|
 | `text` | `string` | Displayed choice text |
 | `setFlag` | `string \| null` | Flag name to set in `state.flags` when chosen |
-| `triggerDialogue` | `string \| null` | Chain to another NPC dialogue |
+| `triggerScene` | `string \| null` | Scene to transition to when chosen (relative dialogue ids are auto-prefixed with `npc:{npcId}:` for NPC dialogues) |
 | `condition` | `object \| null` | Prerequisite (see [Condition](#condition)) |
 | `hooks` | `Hook \| Hook[] \| null` | Declarative effects |
+| `tickFactionClock` | `object \| null` | `{ id, amount }` — ticks a faction clock when the option is chosen |
 
 ---
 

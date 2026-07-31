@@ -117,11 +117,22 @@ function App({ api }) {
           ${ctx.npcs?.length
             ? html`<div class="section">
                 <h3>Talk To</h3>
-                ${ctx.npcs.map((n) =>
-                  html`<button class="btn" onClick=${() => handleCmd({ type: "talk", index: n.index })}>
-                    ${n.name}
-                  </button>`,
-                )}
+                ${ctx.npcs.map((n) => html`
+                  <div>
+                    <button class="btn" onClick=${() => handleCmd({ type: "talk", index: n.index })}>
+                      ${n.name}
+                    </button>
+                    ${n.actions?.length
+                      ? html`<div class="npc-actions">
+                          ${n.actions.map((a) => html`
+                            <button class="btn" onClick=${() => handleCmd({ type: "act_num", index: a.index })}>
+                              ${a.label}
+                            </button>
+                          `)}
+                        </div>`
+                      : null}
+                  </div>
+                `)}
               </div>`
             : null}
         </div>

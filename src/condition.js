@@ -1,3 +1,30 @@
+/**
+ * ### Conditions
+ *
+ * `condition.js` provides prerequisite evaluation for links, location actions, dialogue options, and challenges.
+ *
+ * Condition format:
+ * ```
+ * condition = {
+ *   flag?: string        // required flag must be true
+ *   notFlag?: string     // required flag must be false/missing
+ *   hasItem?: string     // character must have this item ID
+ *   notItem?: string     // character must not have this item ID
+ * }
+ * ```
+ *
+ * Character conditions are codified in a registry. Each condition has an ID, name, description, and tags.
+ * When a character has a condition and scene/challenge tags overlap, they incur −1d penalty.
+ * Each condition also consumes 1 load slot.
+ *
+ * Registry API:
+ * - `getCondition(id)` — return condition definition or null
+ * - `knownConditions()` — return array of all registered condition IDs
+ * - `registerCondition(id, def)` — register a custom condition
+ * - `getConditionTags(id)` — return tags array for a condition
+ *
+ * Built-in conditions: exposed, cornered, shaken, poisoned, doomed, injured, fatigued, compromised, pinned
+ */
 const CONDITIONS = {};
 
 const DEFAULT_CONDITIONS = {

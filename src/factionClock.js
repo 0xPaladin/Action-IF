@@ -1,3 +1,26 @@
+/**
+ * ### Faction Clocks
+ *
+ * `factionClock.js` models faction-level progress clocks that trigger state changes when they fill.
+ *
+ * FactionClock {
+ *   id: string
+ *   name: string
+ *   description: string
+ *   clock: { max: number, current: number }
+ *   completed: boolean
+ *   onComplete: Hook | Hook[] | null   // fires when clock fills
+ * }
+ *
+ * API:
+ * - `createFactionClock(id, name, description, clockMax, onComplete)` — create a new faction clock
+ * - `tickFactionClock(state, clockId, amount = 1)` — advance the clock, fire `onComplete` when full
+ *
+ * Triggers:
+ * - Dialogue options: `tickFactionClock: { id, amount }` on the option
+ * - Challenges: `tickFactionClock: { id, amount }` on the challenge
+ * - Scene resolution: `tickFactionClockOnResolve: { id, amount }` on the scene
+ */
 import { resolveHook } from "./hook.js";
 
 export function createFactionClock(id, name, description, clockMax, onComplete = null) {

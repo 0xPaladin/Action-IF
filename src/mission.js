@@ -1,3 +1,16 @@
+/**
+ * ### Missions
+ *
+ * `mission.js` handles mission (score) utilities.
+ *
+ * API:
+ * - `heatForAction(outcomeLevel, actionHeat)` — returns adjusted heat based on outcome:
+ *   - failure = full actionHeat
+ *   - partial/full = actionHeat - 1
+ *   - critical = actionHeat - 2
+ * - `buildMissionSummary(plotline)` — creates summary text for completed mission
+ * - `createMissionConfig(def)` — creates mission config object from definition
+ */
 export function heatForAction(outcomeLevel, actionHeat = 3) {
   if (outcomeLevel === "critical") return Math.max(0, actionHeat - 2);
   if (outcomeLevel === "partial" || outcomeLevel === "full")

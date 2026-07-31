@@ -131,6 +131,21 @@ export function ContextView({ ctx, onCommand, gameState, engine }) {
                       cmd=${{ type: "talk", index: npc.index }}
                       onCommand=${onCommand}
                     />
+                    ${npc.actions?.length
+                      ? html`
+                          <div class="npc-actions">
+                            ${npc.actions.map(
+                              (a) => html`
+                                <${OptionButton}
+                                  label=${a.label}
+                                  cmd=${{ type: "action", text: a.label }}
+                                  onCommand=${onCommand}
+                                />
+                              `,
+                            )}
+                          </div>
+                        `
+                      : ""}
                   `,
                 )}
               </div>

@@ -1,3 +1,28 @@
+/**
+ * ### Game State
+ *
+ * `state.js` manages the central serialisable game state. No global mutation outside the state module.
+ *
+ * The state tracks:
+ * - `gameName` (string, set from definition's `name` field)
+ * - `zones[]` (the world hierarchy)
+ * - `currentLocation` (the active location node)
+ * - `activeScene` (when a location action triggers a scene)
+ * - `momentum` (number, default 2, shared crew resource)
+ * - `gameStunts` (array of all stunt objects from game definition)
+ * - `flags` (flat object tracking player choices)
+ * - `factions[]`, `claims[]`, `factionClocks[]`
+ * - `characters[]`, `crew`, `npcs[]`
+ *
+ * API:
+ * - `createGameState()` — creates fresh state object
+ * - `serialize(state)` / `deserialize(data)` — for save/load
+ * - `setFlag`, `hasFlag`, `clearFlag` — flag management
+ * - `addLogEntry` — add to game log
+ * - `addCharacter`, `addLocation`, `addScene`, `addPlotline`, `addNPC`
+ * - `setCurrentLocation`, `setActiveScene`, `clearActiveScene`
+ * - `moveNPC`, `removeNPC`
+ */
 export function createGameState() {
   return {
     gameName: null,

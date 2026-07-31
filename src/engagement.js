@@ -1,3 +1,12 @@
+/**
+ * ### Engagement
+ *
+ * `engagement.js` handles the engagement roll that starts a mission (score).
+ *
+ * API:
+ * - `engagementRoll(rating)` — roll a dice pool of `rating` (typically the crew's best action).
+ *   Returns `{ pool, results, outcome, complication }` — no position or engagement shift.
+ */
 import { rollDice, interpretResults } from "./dice.js";
 
 export const APPROACHES = {
