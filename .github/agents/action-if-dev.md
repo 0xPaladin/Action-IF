@@ -89,7 +89,7 @@ games/
     gui.js             # Optional custom SPA (replaces terminal UI)
 ```
 
-An optional `gui.js` file can be placed in a game folder to completely replace the default terminal SPA with a custom UI. When present, the engine detects it at load time and delegates rendering to it. The module must export an `init(api)` or `default(api)` function that receives an API object and renders into `api.root`. It may return a cleanup function. See the [`games/custom-gui-demo/`](games/custom-gui-demo/) folder for a working example.
+An optional `gui.js` file can be placed in a game folder to completely replace the default terminal SPA with a custom UI. When present, the engine detects it at load time and delegates rendering to it. The module must export an `init(api)` or `default(api)` function that receives an API object and renders into `api.root`. It may return a cleanup function. See the [`games/custom-gui-demo/`](../../games/custom-gui-demo/) folder for a working example.
 
 ### Game Definition `name` Field
 
@@ -135,7 +135,7 @@ src/
 
 ## Game Object Definitions
 
-See [`games/example_game_objects.md`](../games/example_game_objects.md) for detailed JSON examples of all game object types including:
+See [`games/example_game_objects.md`](../../games/example_game_objects.md) for detailed JSON examples of all game object types including:
 - Zone, Location, Link, Encounter
 - Character, Item, Stunt
 - Scene (Action & Dialogue), Challenge, ActionEntry, Consequence
@@ -168,7 +168,7 @@ Characters have 12 actions (Muscle, Move, Finesse, Sneak, Shoot, Tinker, Study, 
 - **Dialogue Scenes**: Have options with conditions and hooks
 - **Action Resolution**: Roll dice pool, determine outcome (crit/full/partial/failure), apply consequences on failure
 
-See [CHARGE SRD — QUICK REFERENCE](../rules/charge_quick.md) for a complete reference on the "game" mechanics for characters, action resolution, momentum, etc. 
+See [CHARGE SRD — QUICK REFERENCE](../../rules/charge_quick.md) for a complete reference on the "game" mechanics for characters, action resolution, momentum, etc. 
 
 ### Hooks
 
@@ -179,7 +179,7 @@ Declarative hook system for state changes. Built-in types include:
 - `giveItem`, `takeItem`, `addCondition`, `removeCondition`
 - `addMomentum`, `spendMomentum`, `level_up_action`, `level_up_stunt`
 
-See [`games/example_game_objects.md`](../games/example_game_objects.md) for hook usage examples.
+See [`games/example_game_objects.md`](../../games/example_game_objects.md) for hook usage examples.
 
 ### Engine
 
@@ -219,4 +219,4 @@ bun dev              # starts server.js at localhost:3333
 
 ## WebUI
 
-Default terminal UI uses Preact components. See [`static/app.js`](static/app.js) for the component structure. Custom UIs can be created via `gui.js` in game folders.
+Default terminal UI uses Preact components. See [`static/app.js`](../../static/app.js) for the component structure. Custom UIs can be created via `gui.js` in game folders.
