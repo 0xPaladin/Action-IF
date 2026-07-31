@@ -537,14 +537,14 @@ export function SidePanel({
                 <span class="stat-label">Type</span>
                 <span>${crew.description || crew.name}</span>
               </div>
-              <div class="stat-row">
-                <span class="stat-label">Coin</span>
-                <span>${crew.coin || 0}</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Rep</span>
-                <span>${crew.reputation || 0}</span>
-              </div>
+              ${Object.entries(state.gameResources || {}).map(
+                ([id, def]) => html`
+                  <div class="stat-row" title=${def.description || ""}>
+                    <span class="stat-label">${def.name || id}</span>
+                    <span>${(crew.resources && crew.resources[id]) || 0}</span>
+                  </div>
+                `,
+              )}
               <div class="stat-row">
                 <span class="stat-label">Hold</span>
                 <span>${crew.hold || "—"}</span>

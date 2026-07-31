@@ -75,12 +75,12 @@ describe("createGame", () => {
       factions: [],
       factionClocks: [],
       claims: [],
-      crew: { id: "c1", name: "Crew", description: "A crew of shadows", coin: 3 },
+      crew: { id: "c1", name: "Crew", description: "A crew of shadows", resources: { coin: 3 } },
       startLocation: "room1",
     };
     const state = createGame(def);
     expect(state.crew.name).toBe("Crew");
-    expect(state.crew.coin).toBe(3);
+    expect(state.crew.resources.coin).toBe(3);
   });
 });
 

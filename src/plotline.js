@@ -45,7 +45,7 @@
  * - `updatePlotlines(state)` — scans all plotlines, marks completed, finishes missions
  */
 import { setCurrentLocation, setActiveScene, addLogEntry } from "./state.js";
-import { addCoin, addRep } from "./crew.js";
+import { addResource } from "./crew.js";
 import { addHeat as addFactionHeat } from "./faction.js";
 import { resolveHook } from "./hook.js";
 import { buildMissionSummary } from "./mission.js";
@@ -127,13 +127,13 @@ export function finishMission(state, plotline) {
   if (!plotline.mission || !state.crew) return null;
 
   const mission = plotline.mission;
-  addCoin(state.crew, mission.payoff.coin || 0);
-  addRep(state.crew, mission.payoff.rep || 0);
+  addResource(state.crew, "coin", mission.payoff.coin || 0);
+  addResource(state.crew, "reputation", mission.payoff.rep || 0);
 
   for (const bp of state.crew.bonusPayouts || []) {
     if (bp.tags.length === 0 || bp.tags.some((t) => (mission.tags || []).includes(t))) {
-      if (bp.bonusCoin) addCoin(state.crew, bp.bonusCoin);
-      if (bp.bonusRep) addRep(state.crew, bp.bonusRep);
+      if (bp.bonusCoin) addResource(state.crew, "coin", bp.bonusCoin);
+      if (bp.bonusRep) addResource(state.crew, "reputation", bp.bonusRep);
     }
   }
 

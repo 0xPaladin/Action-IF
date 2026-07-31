@@ -1,5 +1,15 @@
 {
   "name": "Echoes in the Void",
+  "gameResources": {
+    "coin": {
+      "name": "Coin",
+      "description": "Crew funds — spend on downtime activities, gear, and bribes."
+    },
+    "reputation": {
+      "name": "Reputation",
+      "description": "How the crew is known in the sector — affects faction standing and opportunities."
+    }
+  },
   "items": [
     {
       "id": "aurumite_plate",
@@ -150,7 +160,7 @@
     "id": "hammerfall",
     "name": "Guardian Command 'Hammerfall'",
     "description": "A Celestial rapid-response team tasked with containing Ancient threats in contested sectors.",
-    "coin": 4,
+    "resources": { "coin": 4 },
     "hold": "strong",
     "lair": "guardian_hq",
     "upgrades": ["advanced_scanner"],
@@ -733,7 +743,7 @@
               ],
               "onComplete": [
                 { "type": "setFlag", "flag": "agent_defeated" },
-                { "type": "addCoin", "amount": 2 },
+                { "type": "addResource", "id": "coin", "amount": 2 },
                 { "type": "adjustStatus", "factionId": "guardians", "delta": 1 },
                 { "type": "adjustStatus", "factionId": "hegemony", "delta": -1 },
                 { "type": "log", "text": "K'tharr defeated. Archive secured." }

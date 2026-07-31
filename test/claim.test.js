@@ -42,18 +42,18 @@ describe("takeClaim / relinquishClaim", () => {
     state.crew = createCrew("c1", "Crew", { description: "A crew" });
     state.claims.push(createClaim("safehouse", "Safehouse", "A hideout", "docks", "income", { amount: 2 }));
     takeClaim(state, "safehouse");
-    expect(state.crew.coin).toBe(2);
+    expect(state.crew.resources.coin).toBe(2);
     expect(state.claims[0].taken).toBe(true);
   });
 
   test("relinquishClaim reverses effect", () => {
     const state = createGameState();
-    state.crew = createCrew("c1", "Crew", { description: "A crew", coin: 10 });
+    state.crew = createCrew("c1", "Crew", { description: "A crew", resources: { coin: 10 } });
     state.claims.push(createClaim("safehouse", "Safehouse", "A hideout", "docks", "income", { amount: 3 }));
     takeClaim(state, "safehouse");
-    expect(state.crew.coin).toBe(13);
+    expect(state.crew.resources.coin).toBe(13);
     relinquishClaim(state, "safehouse");
-    expect(state.crew.coin).toBe(10);
+    expect(state.crew.resources.coin).toBe(10);
     expect(state.claims[0].taken).toBe(false);
   });
 

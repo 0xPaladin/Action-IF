@@ -3,7 +3,7 @@ import { createGame, getContext, processInput } from "../src/engine.js";
 import { parseInput } from "../src/parser.js";
 import { getActiveMission, startPlotlineMission } from "../src/plotline.js";
 import { engagementRoll } from "../src/engagement.js";
-import { addCoin, addRep, addCrewXp } from "../src/crew.js";
+import { addResource, addCrewXp } from "../src/crew.js";
 import { takeClaim, getAvailableClaims } from "../src/claim.js";
 import {
   startDowntime,
@@ -36,7 +36,9 @@ describe("Verse Setting: Guardian Command 'Hammerfall'", () => {
     expect(state.characters[0].stunts.length).toBeGreaterThanOrEqual(1);
 
     expect(state.crew.name).toBe("Guardian Command 'Hammerfall'");
-    expect(state.crew.coin).toBe(4);
+    expect(state.crew.resources.coin).toBe(4);
+    expect(state.gameResources.coin).toBeDefined();
+    expect(state.gameResources.coin.name).toBe("Coin");
     expect(state.crew.stunts).toHaveLength(1);
     expect(state.crew.stunts[0].id).toBe("guardian_coordination");
 
@@ -410,8 +412,8 @@ describe("Verse Setting: Guardian Command 'Hammerfall'", () => {
   });
 
   test("18 — mission payoff: coin, rep applied", () => {
-    expect(state.crew.coin).toBeGreaterThanOrEqual(4);
-    expect(state.crew.reputation).toBeGreaterThanOrEqual(1);
+    expect(state.crew.resources.coin).toBeGreaterThanOrEqual(4);
+    expect(state.crew.resources.reputation).toBeGreaterThanOrEqual(1);
   });
 
   test("19 — faction heat changed from mission", () => {
@@ -441,9 +443,9 @@ describe("Verse Setting: Guardian Command 'Hammerfall'", () => {
   });
 
   test("21 — income claim adds coin", () => {
-    const coinBefore = state.crew.coin;
+    const coinBefore = state.crew.resources.coin;
     takeClaim(state, "junction_safehouse");
-    expect(state.crew.coin).toBe(coinBefore + 1);
+    expect(state.crew.resources.coin).toBe(coinBefore + 1);
   });
 
   test("22 — faction clock: hegemony_response tracks progress", () => {
@@ -506,16 +508,16 @@ describe("Verse Setting: Guardian Command 'Hammerfall'", () => {
     expect(proj.completed).toBe(true);
   });
 
-  test("28 — crew coin operations", () => {
+  test("28 — crew resource operations", () => {
     const crew = state.crew;
 
-    const coinBefore = crew.coin;
-    addCoin(crew, 5);
-    expect(crew.coin).toBe(coinBefore + 5);
+    const coinBefore = crew.resources.coin;
+    addResource(crew, "coin", 5);
+    expect(crew.resources.coin).toBe(coinBefore + 5);
 
-    const repBefore = crew.reputation;
-    addRep(crew, 2);
-    expect(crew.reputation).toBe(repBefore + 2);
+    const repBefore = crew.resources.reputation;
+    addResource(crew, "reputation", 2);
+    expect(crew.resources.reputation).toBe(repBefore + 2);
   });
 
   test("29 — crew XP tracking", () => {

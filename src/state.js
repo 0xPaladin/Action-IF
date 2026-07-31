@@ -1,3 +1,5 @@
+import { migrateLegacyCrew } from "./crew.js";
+
 /**
  * ### Game State
  *
@@ -10,6 +12,7 @@
  * - `activeScene` (when a location action triggers a scene)
  * - `momentum` (number, default 2, shared crew resource)
  * - `gameStunts` (array of all stunt objects from game definition)
+ * - `gameResources` (object mapping resource id → { name, description } from game definition)
  * - `flags` (flat object tracking player choices)
  * - `factions[]`, `claims[]`, `factionClocks[]`
  * - `characters[]`, `crew`, `npcs[]`
@@ -51,6 +54,7 @@ export function createGameState() {
     npcsByLocation: {},
     items: [],
     gameStunts: [],
+    gameResources: {},
     nextActionBonusDice: 0,
     assistBonusDice: 0,
     protectTargetIndex: null,
@@ -233,5 +237,10 @@ export function serialize(state) {
 }
 
 export function deserialize(data) {
-  return JSON.parse(JSON.stringify(data));
+  const state = JSON.parse(JSON.stringify(data));
+  // Migrate legacy crew saves that stored coin/reputation as top-level fields.
+  if (state.crew) {
+    migrateLegacyCrew(state.crew);
+  }
+  return state;
 }

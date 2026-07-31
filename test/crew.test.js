@@ -1,18 +1,18 @@
 import { describe, test, expect } from "bun:test";
 import {
   createCrew,
-  addRep, addCoin, addUpgrade, hasUpgrade, addCrewXp, addCrewStunt, hasCrewStunt, getCrewStunts,
+  addResource, spendResource, migrateLegacyCrew, addUpgrade, hasUpgrade, addCrewXp, addCrewStunt, hasCrewStunt, getCrewStunts,
 } from "../src/crew.js";
 import { createStunt } from "../src/stunt.js";
 
 describe("createCrew", () => {
-  test("creates crew with description and coin", () => {
+  test("creates crew with description and resources", () => {
     const crew = createCrew("c1", "The Shadows", {
       description: "Undermine authority through theft, infiltration, and sabotage.",
-      coin: 2,
+      resources: { coin: 2 },
     });
     expect(crew.name).toBe("The Shadows");
-    expect(crew.coin).toBe(2);
+    expect(crew.resources.coin).toBe(2);
     expect(crew.hold).toBe("weak");
     expect(crew.description).toContain("theft");
   });
@@ -39,13 +39,53 @@ describe("createCrew", () => {
   });
 });
 
-describe("addRep / addCoin", () => {
+describe("addResource / spendResource", () => {
   test("adds and clamps positive", () => {
     const crew = createCrew("c1", "Crew", { description: "d" });
-    addRep(crew, 5);
-    expect(crew.reputation).toBe(5);
-    addCoin(crew, -3);
-    expect(crew.coin).toBe(0);
+    addResource(crew, "reputation", 5);
+    expect(crew.resources.reputation).toBe(5);
+    addResource(crew, "coin", -3);
+    expect(crew.resources.coin).toBe(0);
+  });
+
+  test("spendResource deducts when sufficient", () => {
+    const crew = createCrew("c1", "Crew", { description: "d", resources: { coin: 5 } });
+    expect(spendResource(crew, "coin", 2)).toBe(true);
+    expect(crew.resources.coin).toBe(3);
+  });
+
+  test("spendResource returns false and does not change when insufficient", () => {
+    const crew = createCrew("c1", "Crew", { description: "d", resources: { coin: 1 } });
+    expect(spendResource(crew, "coin", 5)).toBe(false);
+    expect(crew.resources.coin).toBe(1);
+  });
+
+  test("auto-initializes unknown resource ids", () => {
+    const crew = createCrew("c1", "Crew", { description: "d" });
+    addResource(crew, "favor", 3);
+    expect(crew.resources.favor).toBe(3);
+  });
+});
+
+describe("migrateLegacyCrew", () => {
+  test("migrates legacy coin/reputation fields into resources", () => {
+    const crew = { coin: 4, reputation: 2 };
+    migrateLegacyCrew(crew);
+    expect(crew.resources).toEqual({ coin: 4, reputation: 2 });
+    expect(crew.coin).toBeUndefined();
+    expect(crew.reputation).toBeUndefined();
+  });
+
+  test("preserves existing resources when migrating", () => {
+    const crew = { resources: { coin: 1 }, coin: 4, reputation: 2 };
+    migrateLegacyCrew(crew);
+    expect(crew.resources).toEqual({ coin: 5, reputation: 2 });
+    expect(crew.coin).toBeUndefined();
+    expect(crew.reputation).toBeUndefined();
+  });
+
+  test("handles null crew", () => {
+    expect(migrateLegacyCrew(null)).toBeNull();
   });
 });
 

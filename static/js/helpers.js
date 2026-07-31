@@ -280,6 +280,18 @@ export function restoreState(fresh, saved) {
 
   if (fresh.crew && saved.crew) {
     Object.assign(fresh.crew, saved.crew);
+    // Migrate legacy crew saves that stored coin/reputation as top-level fields.
+    if (fresh.crew) {
+      if (!fresh.crew.resources) fresh.crew.resources = {};
+      if (fresh.crew.coin !== undefined) {
+        fresh.crew.resources.coin = (fresh.crew.resources.coin || 0) + fresh.crew.coin;
+        delete fresh.crew.coin;
+      }
+      if (fresh.crew.reputation !== undefined) {
+        fresh.crew.resources.reputation = (fresh.crew.resources.reputation || 0) + fresh.crew.reputation;
+        delete fresh.crew.reputation;
+      }
+    }
   }
 
   (saved.characters || []).forEach((sc, i) => {

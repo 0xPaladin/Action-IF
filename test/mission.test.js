@@ -100,7 +100,7 @@ describe("addMissionHeat", () => {
 describe("finishMission", () => {
   test("applies payoff, heat to factions, clears mission", () => {
     const state = createGameState();
-    state.crew = createCrew("crew1", "The Crew", { description: "A crew of shadows", coin: 5 });
+    state.crew = createCrew("crew1", "The Crew", { description: "A crew of shadows", resources: { coin: 5 } });
     state.factions.push(createFaction("lampblacks", "Lampblacks", "", { heat: 0 }));
     state.factions.push(createFaction("billhooks", "Billhooks", "", { heat: 0 }));
     const p = makePlotline("p1", ["s1"], {
@@ -115,8 +115,8 @@ describe("finishMission", () => {
     state.activeMissionId = "p1";
     p.mission.heatGenerated = 3;
     finishMission(state, p);
-    expect(state.crew.coin).toBe(8);
-    expect(state.crew.reputation).toBe(2);
+    expect(state.crew.resources.coin).toBe(8);
+    expect(state.crew.resources.reputation).toBe(2);
     const patron = state.factions.find((f) => f.id === "lampblacks");
     expect(patron.heat).toBe(-2);
     const target = state.factions.find((f) => f.id === "billhooks");

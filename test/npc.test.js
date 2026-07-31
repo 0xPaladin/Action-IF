@@ -183,7 +183,7 @@ describe("createNPCDialogueScene", () => {
           setFlag: "bribe_offered",
           triggerScene: "some_other_scene",
           condition: { notFlag: "bribe_attempted" },
-          hooks: [{ type: "spendCoin", amount: 2 }],
+          hooks: [{ type: "spendResource", id: "coin", amount: 2 }],
           tickFactionClock: { id: "bluecoat_investigation", amount: 2 },
         },
       ],
@@ -194,7 +194,7 @@ describe("createNPCDialogueScene", () => {
     expect(opt.setFlag).toBe("bribe_offered");
     expect(opt.triggerScene).toBe("some_other_scene");
     expect(opt.condition).toEqual({ notFlag: "bribe_attempted" });
-    expect(opt.hooks).toEqual([{ type: "spendCoin", amount: 2 }]);
+    expect(opt.hooks).toEqual([{ type: "spendResource", id: "coin", amount: 2 }]);
     expect(opt.tickFactionClock).toEqual({ id: "bluecoat_investigation", amount: 2 });
   });
 

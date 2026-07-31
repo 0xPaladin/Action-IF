@@ -924,7 +924,7 @@ Player choices in dialogue scenes.
   "triggerScene": "npc:valeria:bribe_accepted",
   "condition": { "notFlag": "bribe_attempted" },
   "hooks": [
-    { "type": "spendCoin", "amount": 2 },
+    { "type": "spendResource", "id": "coin", "amount": 2 },
     { "type": "tickFactionClock", "id": "bluecoat_investigation", "amount": 2 }
   ],
   "tickFactionClock": null
@@ -1205,17 +1205,18 @@ Faction clocks can be ticked from three places:
 
 ## Crew
 
-Each crew is unique and stands on its own — no crew types or templates. A crew has a description, coin, reputation, hold, upgrades, XP, and stunts. A crew stunt applies to **all characters** in the crew.
+Each crew is unique and stands on its own — no crew types or templates. A crew has a description, a `resources` map (keyed by resource id), hold, upgrades, XP, and stunts. A crew stunt applies to **all characters** in the crew.
+
+The set of known resource ids and their display names/descriptions is declared at the top level of the game definition via `gameResources`. Resource amounts are stored in `crew.resources` (a plain object mapping id → number). The map is lenient: any id may be used and auto-initializes to 0.
 
 ```json
 {
   "id": "hammerfall",
   "name": "Guardian Command 'Hammerfall'",
   "description": "A Celestial rapid-response team tasked with containing Ancient threats in contested sectors.",
-  "coin": 4,
+  "resources": { "coin": 4, "reputation": 2 },
   "hold": "strong",
   "lair": "guardian_hq",
-  "reputation": 2,
   "upgrades": ["advanced_scanner"],
   "stunts": ["guardian_coordination"],
   "claims": [],
@@ -1230,10 +1231,9 @@ Each crew is unique and stands on its own — no crew types or templates. A crew
 | `id` | `string` | Unique crew identifier |
 | `name` | `string` | Display name |
 | `description` | `string` | Crew description |
-| `coin` | `number` | Coin held |
+| `resources` | `object` | Map of resource id → amount (e.g. `{ "coin": 4, "reputation": 2 }`) |
 | `hold` | `"strong" \| "weak" \| "none"` | Crew hold |
 | `lair` | `string` | Lair location ID |
-| `reputation` | `number` | Crew reputation |
 | `upgrades` | `string[]` | Upgrade IDs |
 | `stunts` | `string[]` | Stunt IDs from the top-level `stunts` array |
 | `claims` | `string[]` | Taken claim IDs |
@@ -1333,10 +1333,9 @@ Hooks provide a declarative mechanism for state changes in game definitions. The
 | `clearFlag` | `flag` | Deletes `state.flags[flag]` |
 | `tickClock` | `clockId`, `amount` (1) | Ticks a faction clock |
 | `addHeat` | `amount` (2) | Adds heat to crew |
-| `addRep` | `amount` (1) | Adds rep to crew |
-| `addCoin` | `amount` (2) | Adds coin to crew |
 | `addXp` | `amount` (2) | Adds XP to crew |
-| `spendCoin` | `amount` (2) | Deducts coin from crew |
+| `addResource` | `id`, `amount` (1) | Adds to a crew resource (by id) |
+| `spendResource` | `id`, `amount` (1) | Deducts from a crew resource (by id); errors if insufficient |
 | `setScene` | `sceneId` | Transitions to a scene |
 | `encounter` | `encounter` | Triggers an encounter scene (string ID or `[idArray, weightArray]`) |
 | `log` | `text` | Adds a log entry |
@@ -1415,7 +1414,7 @@ registerHook("myEffect", (state, params, context) => {
           "id": "rumors",
           "label": "Listen for rumors",
           "description": "Eavesdrop on the crowd.",
-          "hooks": { "type": "addCoin", "amount": 1 }
+          "hooks": { "type": "addResource", "id": "coin", "amount": 1 }
         }
       ]
     }

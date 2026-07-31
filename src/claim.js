@@ -25,7 +25,7 @@
  * - `takeClaim(state, claimId)` — marks a claim taken, runs its template's `apply`
  * - `relinquishClaim(state, claimId)` — runs `remove`, marks untaken
  */
-import { addCoin, addRep, addUpgrade, addCrewStunt, hasUpgrade, hasCrewStunt } from "./crew.js";
+import { addResource, addUpgrade, addCrewStunt, hasUpgrade, hasCrewStunt } from "./crew.js";
 import { addHeat as addFactionHeat } from "./faction.js";
 
 const BUILTIN_TEMPLATES = {};
@@ -43,13 +43,13 @@ export function knownClaimTemplates() {
 }
 
 registerClaimTemplate("income", "Income", "Generates passive coin each downtime.",
-  (s, crew, claim) => { if (crew) addCoin(crew, claim.params.amount || 1); },
-  (s, crew, claim) => { if (crew) addCoin(crew, -(claim.params.amount || 1)); },
+  (s, crew, claim) => { if (crew) addResource(crew, "coin", claim.params.amount || 1); },
+  (s, crew, claim) => { if (crew) addResource(crew, "coin", -(claim.params.amount || 1)); },
 );
 
 registerClaimTemplate("rep_boost", "Reputation", "Increases crew reputation.",
-  (s, crew, claim) => { if (crew) addRep(crew, claim.params.amount || 1); },
-  (s, crew, claim) => { if (crew) addRep(crew, -(claim.params.amount || 1)); },
+  (s, crew, claim) => { if (crew) addResource(crew, "reputation", claim.params.amount || 1); },
+  (s, crew, claim) => { if (crew) addResource(crew, "reputation", -(claim.params.amount || 1)); },
 );
 
 registerClaimTemplate("heat_sink", "Safe Haven", "Reduces heat generation on missions. Stacks with other heat sinks.",

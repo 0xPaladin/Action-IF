@@ -157,6 +157,8 @@ export function createGame(definition) {
     state.gameStunts.push(stuntCache[def.id]);
   }
 
+  state.gameResources = definition.gameResources || {};
+
   for (const def of definition.characters || []) {
     const char = createCharacter(def.name);
 
@@ -457,8 +459,9 @@ export function createGame(definition) {
     state.crew = createCrew(c.id, c.name, {
       description: c.description || "",
       lair: c.lair || null,
-      reputation: c.reputation || 0,
-      coin: c.coin || 0,
+      resources: c.resources || {},
+      coin: c.coin,
+      reputation: c.reputation,
       hold: c.hold || "weak",
       upgrades: c.upgrades || [],
       stunts: resolvedStunts,

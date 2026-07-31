@@ -53,11 +53,37 @@ describe("built-in hooks", () => {
     expect(state.gameLog[1].type).toBe("message");
   });
 
-  test("addRep / addCoin / addXp require crew", () => {
+  test("addResource / spendResource / addXp require crew", () => {
     const state = createGameState();
-    expect(() => resolveHook(state, { type: "addRep" })).not.toThrow();
-    expect(() => resolveHook(state, { type: "addCoin" })).not.toThrow();
+    expect(() => resolveHook(state, { type: "addResource", id: "coin", amount: 1 })).not.toThrow();
+    expect(() => resolveHook(state, { type: "spendResource", id: "coin", amount: 1 })).not.toThrow();
     expect(() => resolveHook(state, { type: "addXp" })).not.toThrow();
+  });
+
+  test("addResource adds to crew resources", () => {
+    const state = createGameState();
+    state.crew = { resources: {} };
+    const result = resolveHook(state, { type: "addResource", id: "coin", amount: 3 });
+    expect(state.crew.resources.coin).toBe(3);
+    expect(result).toEqual({ type: "resource_added", id: "coin", amount: 3, total: 3 });
+  });
+
+  test("spendResource deducts when sufficient", () => {
+    const state = createGameState();
+    state.crew = { resources: { coin: 5 } };
+    const result = resolveHook(state, { type: "spendResource", id: "coin", amount: 2 });
+    expect(state.crew.resources.coin).toBe(3);
+    expect(result).toEqual({ type: "resource_spent", id: "coin", amount: 2, total: 3 });
+  });
+
+  test("spendResource errors on insufficient funds", () => {
+    const state = createGameState();
+    state.crew = { resources: { coin: 1 } };
+    state.gameResources = { coin: { name: "Coin", description: "Funds" } };
+    const result = resolveHook(state, { type: "spendResource", id: "coin", amount: 5 });
+    expect(state.crew.resources.coin).toBe(1);
+    expect(result.type).toBe("error");
+    expect(result.message).toContain("Not enough Coin");
   });
 
   test("clearActiveScene", () => {

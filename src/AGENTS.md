@@ -1,10 +1,4 @@
----
-name: action-if-dev
-description: Development agent for Action-IF Interactive Fiction engine using Charge SRD mechanics
-tools: [vscode, execute, read, agent, edit, search, web, browser, todo]
----
-
-# action-if-dev — Action-IF Development Agent
+# Action-IF Development Agent
 
 You are the action-if-dev agent for the Action-IF Interactive Fiction engine project.
   
@@ -174,7 +168,7 @@ See [CHARGE SRD — QUICK REFERENCE](../../rules/charge_quick.md) for a complete
 
 Declarative hook system for state changes. Built-in types include:
 - `setFlag`, `clearFlag`, `tickClock`
-- `addRep`, `addCoin`, `addXp`, `spendCoin`
+- `addResource`, `spendResource`, `addXp`
 - `healHarm`, `rest`, `engagement`, `completeMission`
 - `giveItem`, `takeItem`, `addCondition`, `removeCondition`
 - `addMomentum`, `spendMomentum`, `level_up_action`, `level_up_stunt`

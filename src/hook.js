@@ -8,7 +8,8 @@
  * - `setFlag` — Sets `state.flags[flag] = true`
  * - `clearFlag` — Deletes `state.flags[flag]`
  * - `tickClock` — Ticks a faction clock
- * - `addRep`, `addCoin`, `addXp`, `spendCoin` — Crew resource changes
+ * - `addResource`, `spendResource` — Generic crew resource changes (by id)
+ * - `addXp` — Crew XP changes
  * - `healHarm`, `rest`, `engagement`, `completeMission` — Mission/character effects
  * - `giveItem`, `takeItem`, `addCondition`, `removeCondition` — Inventory/conditions
  * - `addMomentum`, `spendMomentum` — Momentum pool changes
@@ -17,7 +18,7 @@
  * Custom hook types can be registered with `registerHook(type, handler)`.
  */
 import { tickFactionClock } from "./factionClock.js";
-import { addCoin, addRep, addCrewXp } from "./crew.js";
+import { addResource, spendResource, addCrewXp } from "./crew.js";
 import {
   setActiveScene,
   setFlag,
@@ -81,12 +82,37 @@ registerHook("tickClock", (state, params) => {
   tickFactionClock(state, params.clockId, params.amount || 1);
 });
 
-registerHook("addRep", (state, params) => {
-  if (state.crew) addRep(state.crew, params.amount || 1);
+registerHook("addResource", (state, params) => {
+  if (!state.crew) return null;
+  const amount = params.amount || 1;
+  addResource(state.crew, params.id, amount);
+  return {
+    type: "resource_added",
+    id: params.id,
+    amount,
+    total: state.crew.resources[params.id] || 0,
+  };
 });
 
-registerHook("addCoin", (state, params) => {
-  if (state.crew) addCoin(state.crew, params.amount || 2);
+registerHook("spendResource", (state, params) => {
+  if (!state.crew) return null;
+  const amount = params.amount || 1;
+  const ok = spendResource(state.crew, params.id, amount);
+  if (!ok) {
+    const name =
+      (state.gameResources[params.id] && state.gameResources[params.id].name) ||
+      params.id;
+    return {
+      type: "error",
+      message: `Not enough ${name}. Need ${amount}.`,
+    };
+  }
+  return {
+    type: "resource_spent",
+    id: params.id,
+    amount,
+    total: state.crew.resources[params.id] || 0,
+  };
 });
 
 registerHook("addXp", (state, params) => {
@@ -139,10 +165,6 @@ registerHook("completePlotline", (state, params) => {
 
 registerHook("setLocation", (state, params) => {
   state.currentLocation = params.locationId;
-});
-
-registerHook("spendCoin", (state, params) => {
-  if (state.crew) addCoin(state.crew, -(params.amount || 2));
 });
 
 registerHook("rest", (state, params) => {
@@ -209,16 +231,16 @@ registerHook("completeMission", (state, params, context) => {
   const mission = plotline.mission;
 
   if (state.crew) {
-    addCoin(state.crew, mission.payoff.coin || 0);
-    addRep(state.crew, mission.payoff.rep || 0);
+    addResource(state.crew, "coin", mission.payoff.coin || 0);
+    addResource(state.crew, "reputation", mission.payoff.rep || 0);
 
     for (const bp of state.crew.bonusPayouts || []) {
       if (
         bp.tags.length === 0 ||
         bp.tags.some((t) => (mission.tags || []).includes(t))
       ) {
-        if (bp.bonusCoin) addCoin(state.crew, bp.bonusCoin);
-        if (bp.bonusRep) addRep(state.crew, bp.bonusRep);
+        if (bp.bonusCoin) addResource(state.crew, "coin", bp.bonusCoin);
+        if (bp.bonusRep) addResource(state.crew, "reputation", bp.bonusRep);
       }
     }
   }
