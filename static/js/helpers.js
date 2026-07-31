@@ -116,6 +116,50 @@ export function formatDangerTrigger(trigger) {
   }
 }
 
+// Build a human-friendly roll line from a roll_result / challenge_done result.
+export function formatRollLabel(result) {
+  const label = abbreviate(formatSceneActionLabel(result), 80);
+  const pool = result.roll.pool;
+  const results = (result.roll.results || []).join(", ");
+  const level = result.roll.outcome.level;
+  const effect = result.result?.effect;
+  const reduced = result.result?.reduced;
+  const effectLabel = effect ? ` [${effect} effect]` : "";
+  const reducedLabel = reduced ? " (reduced effect)" : "";
+  if (level === "partial") {
+    if (reduced) {
+      return `${label} [${pool}d] ${results} → Minor success${effectLabel}${reducedLabel}`;
+    }
+    const cons = result.result?.consequence;
+    if (cons) {
+      const risk = getRiskLabelFromResult(cons);
+      let line = `${label} [${pool}d] ${results} → Minor success${effectLabel}: ${cons.description} (${risk})`;
+      const trigger = cons.templateResult?.trigger;
+      if (trigger) {
+        const dangerMsg = formatDangerTrigger(trigger);
+        if (dangerMsg) line += `\n${dangerMsg}`;
+      }
+      return line;
+    }
+    return `${label} [${pool}d] ${results} → Minor success${effectLabel}`;
+  }
+  if (level === "failure") {
+    const cons = result.result?.consequence;
+    if (cons) {
+      const risk = getRiskLabelFromResult(cons);
+      let line = `${label} [${pool}d] ${results} → Failure${effectLabel}: ${cons.description} (${risk})`;
+      const trigger = cons.templateResult?.trigger;
+      if (trigger) {
+        const dangerMsg = formatDangerTrigger(trigger);
+        if (dangerMsg) line += `\n${dangerMsg}`;
+      }
+      return line;
+    }
+    return `${label} [${pool}d] ${results} → Failure${effectLabel}`;
+  }
+  return `${label} [${pool}d] ${results} → ${result.roll.outcome.label}${effectLabel}`;
+}
+
 // Build a human-friendly one-liner from an engine result.
 export function formatTypeLabel(result) {
   switch (result.type) {
@@ -124,6 +168,7 @@ export function formatTypeLabel(result) {
     case "scene_start":
       return `★ ${abbreviate(result.sceneFiction, 60)}`;
     case "scene_end":
+      if (result.roll) return `✓ ${formatRollLabel(result)}`;
       return abbreviate(formatSceneActionLabel(result), 80);
     case "action_done":
       return result.actionLabel || "Done.";
@@ -133,50 +178,10 @@ export function formatTypeLabel(result) {
       return result.text || "Protected!";
     case "setup_result":
       return result.text || "Set up!";
-    case "roll_result": {
-      const label = abbreviate(formatSceneActionLabel(result), 80);
-      const pool = result.roll.pool;
-      const results = (result.roll.results || []).join(", ");
-      const level = result.roll.outcome.level;
-      const effect = result.result?.effect;
-      const reduced = result.result?.reduced;
-      const effectLabel = effect ? ` [${effect} effect]` : "";
-      const reducedLabel = reduced ? " (reduced effect)" : "";
-      if (level === "partial") {
-        if (reduced) {
-          return `${label} [${pool}d] ${results} → Minor success${effectLabel}${reducedLabel}`;
-        }
-        const cons = result.result?.consequence;
-        if (cons) {
-          const risk = getRiskLabelFromResult(cons);
-          let line = `${label} [${pool}d] ${results} → Minor success${effectLabel}: ${cons.description} (${risk})`;
-          const trigger = cons.templateResult?.trigger;
-          if (trigger) {
-            const dangerMsg = formatDangerTrigger(trigger);
-            if (dangerMsg) line += `\n${dangerMsg}`;
-          }
-          return line;
-        }
-        return `${label} [${pool}d] ${results} → Minor success${effectLabel}`;
-      }
-      if (level === "failure") {
-        const cons = result.result?.consequence;
-        if (cons) {
-          const risk = getRiskLabelFromResult(cons);
-          let line = `${label} [${pool}d] ${results} → Failure${effectLabel}: ${cons.description} (${risk})`;
-          const trigger = cons.templateResult?.trigger;
-          if (trigger) {
-            const dangerMsg = formatDangerTrigger(trigger);
-            if (dangerMsg) line += `\n${dangerMsg}`;
-          }
-          return line;
-        }
-        return `${label} [${pool}d] ${results} → Failure${effectLabel}`;
-      }
-      return `${label} [${pool}d] ${results} → ${result.roll.outcome.label}${effectLabel}`;
-    }
+    case "roll_result":
+      return formatRollLabel(result);
     case "challenge_done":
-      return `✓ ${abbreviate(formatSceneActionLabel(result), 80)}`;
+      return `✓ ${formatRollLabel(result)}`;
     case "fortune_result":
       return `Fortune: ${result.outcome.label} [${(result.results || []).join(", ")}]`;
     case "help":

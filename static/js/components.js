@@ -51,6 +51,12 @@ export function MessageRow({ msg, onCommand, gameState, engine }) {
       </div>`;
     case "result":
       return html`<div class="msg msg-result">${msg.text}</div>`;
+    case "fiction":
+      return html`<div class="msg msg-fiction">${msg.text}</div>`;
+    case "roll":
+      return html`<div class="msg msg-result msg-roll ${msg.completed ? "completed" : ""}">${msg.text}</div>`;
+    case "command":
+      return html`<div class="msg msg-result msg-command" data-id=${msg.id}>${msg.text}</div>`;
     case "mission_complete":
       return html`<div class="msg msg-mission">${msg.text}</div>`;
     case "divider":
@@ -173,7 +179,6 @@ export function ContextView({ ctx, onCommand, gameState, engine }) {
               >
             </div>`
           : ""}
-        <div class="scene-fiction">${ctx.fiction}</div>
         ${ctx.tags?.length
           ? html`<div class="tag-list">
               Tags: ${ctx.tags.map((t, i) => html`${i > 0 ? ", " : ""}${t}`)}

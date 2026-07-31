@@ -284,6 +284,37 @@ body {
   white-space: pre-wrap;
 }
 
+/* Novel-style fiction block: full scene text in the message stream. */
+.msg-fiction {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* Action roll results: bordered box at 0.8 of standard font size. */
+.msg-roll {
+  border: 1px solid #000;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  font-size: 0.8em;
+}
+
+/* Utility command results: bordered, fade out and removed after 15s. */
+.msg-command {
+  border: 1px solid #000;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  animation: command-fade 1.5s ease 13.5s forwards;
+}
+
+@keyframes command-fade {
+  to {
+    opacity: 0;
+  }
+}
+
 .msg-mission {
   margin: 8px 0;
   padding: 6px 8px;
@@ -316,11 +347,6 @@ body {
 }
 
 .loc-desc {
-  margin-bottom: 8px;
-  white-space: pre-wrap;
-}
-
-.scene-fiction {
   margin-bottom: 8px;
   white-space: pre-wrap;
 }

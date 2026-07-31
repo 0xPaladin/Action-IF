@@ -13,6 +13,7 @@ import {
   restoreState,
   loadGameDefinition,
   formatTypeLabel,
+  formatRollLabel,
 } from "./js/helpers.js";
 import { tryLoadGui, buildGuiApi } from "./js/gui-api.js";
 import {
@@ -63,6 +64,38 @@ function App() {
   const gameListRef = useRef([]);
   const defRef = useRef(null);
   const customHooksRef = useRef(null);
+  // Track scene IDs whose fiction has already been posted to the message log,
+  // so re-enterable dialogue scenes don't repeat their fiction.
+  const postedSceneIdsRef = useRef(new Set());
+  // Monotonic counter for command-result message IDs (used for 15s fade-out removal).
+  const msgIdRef = useRef(0);
+
+  // Command result types that get a bordered, fading message (removed after 15s).
+  const COMMAND_RESULT_TYPES = new Set([
+    "help",
+    "save",
+    "load",
+    "saves",
+    "gm_result",
+    "downtime_result",
+    "fortune_result",
+    "levelup",
+    "loadlevel",
+    "item_toggled",
+  ]);
+
+  // Command types whose player input should NOT be echoed as "> text" in the log
+  // (option/action selections via buttons or number keys).
+  const NO_ECHO_TYPES = new Set([
+    "select",
+    "go_num",
+    "act_num",
+    "talk",
+    "resolve",
+    "assist",
+    "setup",
+    "toggleitem",
+  ]);
 
   // Shared game-loading logic: loads definition, registers hooks, creates state,
   // and either delegates to a custom gui.js or renders the default terminal UI.
@@ -76,6 +109,8 @@ function App() {
         guiCleanupRef.current = null;
       }
       guiModRef.current = null;
+      // Reset the scene-fiction dedup tracker for a fresh game or load.
+      postedSceneIdsRef.current = new Set();
 
       const { def, customHooks } = await loadGameDefinition(gameId);
 
@@ -285,12 +320,51 @@ function App() {
 
       const newMsgs = [...messages];
 
-      if (inputText) {
+      // Echo player input only for freeform typed commands; suppress echo for
+      // option/action selections (numbers, buttons, resolve, etc.).
+      // Echo player input only for freeform typed commands that produce a
+      // permanent result; suppress echo for option/action selections and for
+      // command results (which include the echo inside their bordered box).
+      if (inputText && !NO_ECHO_TYPES.has(cmd.type) && !COMMAND_RESULT_TYPES.has(result.type)) {
         newMsgs.push({ type: "player", text: inputText });
       }
 
       if (result.type === "error") {
         newMsgs.push({ type: "result", text: result.message });
+      } else if (result.type === "scene_start") {
+        // Post the full scene fiction to the message log, but only once per
+        // scene ID so re-enterable dialogue scenes don't repeat their fiction.
+        const sceneId = result.sceneId;
+        if (sceneId && !postedSceneIdsRef.current.has(sceneId)) {
+          postedSceneIdsRef.current.add(sceneId);
+          newMsgs.push({ type: "fiction", text: result.sceneFiction });
+        }
+      } else if (result.type === "roll_result") {
+        newMsgs.push({ type: "roll", text: formatRollLabel(result), completed: false });
+      } else if (result.type === "challenge_done") {
+        newMsgs.push({ type: "roll", text: formatTypeLabel(result), completed: true });
+      } else if (result.type === "scene_end") {
+        // If the scene ended on a roll (e.g. final challenge resolved), show
+        // the roll with a check mark. Dialogue scenes that end without a roll
+        // post nothing — the fiction was already shown at scene_start.
+        if (result.roll) {
+          newMsgs.push({ type: "roll", text: formatTypeLabel(result), completed: true });
+        }
+      } else if (COMMAND_RESULT_TYPES.has(result.type)) {
+        // Utility command results: bordered, fade out and remove after 15s.
+        // The player's typed command (if any) is included in the box so it
+        // fades out together with the result.
+        const id = ++msgIdRef.current;
+        const label = formatTypeLabel(result) || result.text || "";
+        if (label) {
+          const text = inputText && !NO_ECHO_TYPES.has(cmd.type)
+            ? `> ${inputText}\n${label}`
+            : label;
+          newMsgs.push({ type: "command", text, id });
+          setTimeout(() => {
+            setMessages((prev) => prev.filter((m) => m.id !== id));
+          }, 15000);
+        }
       } else {
         const label = formatTypeLabel(result);
         if (label) newMsgs.push({ type: "result", text: label });
@@ -332,18 +406,25 @@ function App() {
           .then((r) => r.json())
           .then((data) => {
             const saveList = data.saves || [];
-            const text = saveList.length
+            const label = saveList.length
               ? `Saved games:\n${saveList.map((s) => `  ${s.id}`).join("\n")}`
               : "No saved games found.";
+            const id = ++msgIdRef.current;
+            const text = inputText && !NO_ECHO_TYPES.has(cmd.type)
+              ? `> ${inputText}\n${label}`
+              : label;
             setMessages((prev) => {
               const filtered = prev.filter((m) => m.type !== "context");
-              filtered.push({ type: "result", text });
+              filtered.push({ type: "command", text, id });
               filtered.push({
                 type: "context",
                 context: engineRef.current.getContext(gameRef.current),
               });
               return filtered;
             });
+            setTimeout(() => {
+              setMessages((prev) => prev.filter((m) => m.id !== id));
+            }, 15000);
           });
       }
 
